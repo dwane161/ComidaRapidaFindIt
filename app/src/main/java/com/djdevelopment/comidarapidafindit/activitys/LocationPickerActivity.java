@@ -29,6 +29,7 @@ import com.google.android.gms.analytics.Tracker;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.GoogleMap.OnMapClickListener;
+import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.Circle;
@@ -44,7 +45,7 @@ import java.util.Locale;
 import static com.djdevelopment.comidarapidafindit.config.ComidaRapidaApp.TrackerName.APP_TRACKER;
 
 
-public class LocationPickerActivity extends AppCompatActivity {
+public class LocationPickerActivity extends AppCompatActivity implements OnMapReadyCallback  {
 
 
     private static final int TAG_CODE_PERMISSION_LOCATION = 0;
@@ -222,9 +223,26 @@ public class LocationPickerActivity extends AppCompatActivity {
 	            }
 	        }
 	    }
-	  
-	  
-	  private void setAddressText(){
+
+	@Override
+	public void onMapReady(GoogleMap map) {
+
+		googleMap = map;
+
+		setUpMaps();
+
+	}
+
+	public void setUpMaps(){
+
+		googleMap.setMapType(GoogleMap.MAP_TYPE_HYBRID);
+		googleMap.setTrafficEnabled(true);
+		googleMap.setIndoorEnabled(true);
+		googleMap.setBuildingsEnabled(true);
+		googleMap.getUiSettings().setZoomControlsEnabled(true);
+	}
+
+	private void setAddressText(){
 		  
 		  final LatLng latLng = 	  selectedMarker.getPosition();
 			new Thread(new Runnable() {

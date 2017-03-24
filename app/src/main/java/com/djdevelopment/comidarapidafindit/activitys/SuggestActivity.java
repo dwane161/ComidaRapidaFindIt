@@ -18,13 +18,16 @@ import android.provider.MediaStore;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
+import android.widget.ScrollView;
 import android.widget.TextView;
 
 import com.djdevelopment.comidarapidafindit.R;
@@ -32,6 +35,10 @@ import com.djdevelopment.comidarapidafindit.data.Image;
 import com.djdevelopment.comidarapidafindit.data.MenuService;
 import com.djdevelopment.comidarapidafindit.tools.UtilUI;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.firebase.FirebaseApp;
+import com.google.firebase.FirebaseOptions;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -46,6 +53,7 @@ public class SuggestActivity extends AppCompatActivity {
     private Typeface custom_font2 = null;
     LinearLayout cardViewServices = null;
     private ArrayList<String> telephones = null;
+    private EditText txtName  = null;
     private ArrayList<String> creditCards = null;
     private ArrayList<Image> imagesList = null;
     private LatLng selectMotelLatLng = null;
@@ -53,6 +61,7 @@ public class SuggestActivity extends AppCompatActivity {
     LinearLayout cardViewServicesTelephons = null;
     LinearLayout cardViewCreditCards = null;
     LinearLayout cardViewLocation = null;
+    private DatabaseReference mDatabase;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -78,6 +87,60 @@ public class SuggestActivity extends AppCompatActivity {
         cardViewServices =  (LinearLayout)findViewById(R.id.cardViewServicesPrices);
 
         initComponents();
+
+
+        txtName =  (EditText) findViewById(R.id.txtName);
+        final Button btnSend = (Button)findViewById(R.id.btnSend);
+
+        btnSend.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                //Nombre de restaurante
+                String restName = "";
+                String creditCars = "";
+                String telephonesArray = "";
+                restName = txtName.getText().toString();
+
+                //Localizacion de restaurante
+                String LatLngCoord = "";
+                if(selectMotelLatLng != null){
+                    LatLngCoord = selectMotelLatLng.toString();
+                }
+                if(LatLngCoord.isEmpty()){
+                    UtilUI.showAlertDialog(SuggestActivity.this, getString(R.string.location_info),getString(R.string.select_location_info) ,R.string.iGotIt,null);
+                    (SuggestActivity.this.findViewById(R.id.lblLocation)).requestFocus();;
+                    ScrollView sv = (ScrollView) SuggestActivity.this.findViewById(R.id.ScrollViewSujectMotel);
+                    sv.scrollTo(0, sv.getTop());
+                    return ;
+                }
+                //Menu de restaurante
+                if(!UtilUI.validateEmptyFields(SuggestActivity.this,txtName)
+                        && UtilUI.validateInternetConnetion(SuggestActivity.this,null)){
+
+                    ArrayList<String> resMenuArray = new ArrayList<>();
+
+
+                    for(MenuService menu: menuServices){
+                        resMenuArray.add("{name: '"+ menu.getMenuName() + "', price: '" + menu.getPrice() +"', currency: '" + menu.getCurrencyType() + "'}");
+                    }
+                    creditCars = TextUtils.join(", ", creditCards.toArray());
+                    telephonesArray = TextUtils.join(", ", telephones.toArray());
+                    UtilUI.showAlertDialog(SuggestActivity.this, SuggestActivity.this.getString(R.string.thanksContibution),SuggestActivity.this.getString(R.string.thanksForSubmitInfo), R.string.iGotIt, new Runnable() {
+
+                        @Override
+                        public void run() {
+                            SuggestActivity.this.finish();
+
+                        }
+                    });
+
+                    mDatabase = FirebaseDatabase.getInstance().getReferenceFromUrl("https://comidarapida-cae88.firebaseio.com/");
+                    mDatabase.setValue("hola mundo");
+                }
+
+            }
+        });
     }
 
     public void initComponents(){

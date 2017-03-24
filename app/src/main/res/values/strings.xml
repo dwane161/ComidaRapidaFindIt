@@ -22,6 +22,8 @@
     <string name="msInternetNoConnection">No hay conexión a internet.</string>
     <string name="message">Mensaje</string>
     <string name="help">Ayuda</string>
+    <string name="location_info">Ubicación</string>
+    <string name="select_location_info">Por favor seleccionar la ubicación del local</string>
     <string name="price">Precio</string>
     <string name="iGotIt">¡Entiendo!</string>
     <string name="selectPositionHelp">Toca para seleccionar la ubicación deseada, luego presionar el boton seleccionar ubicación.\n\nNo te preocupes si el  punto no está en la ubicación  exacta, es  una aproximación de la dirección, nuestro equipo se encargara de verificar la veracidad de los datos.</string>
@@ -31,7 +33,9 @@
     <string name="cancel">Cancelar</string>
 
     <!-- Strings related to Settings -->
-
+<string name="thanksForSubmitInfo">Gracias por ser parte de la comunidad de colaboradores, ¡tu ayuda es bien recibida!.
+\n\nTodos los datos  suministrados son enviados de manera anónima y serán evaluados por nuestro equipo, para su posible publicación.
+</string>
     <!--     Errors Messages  -->
 
     <string name="msErrorEmptyField">Debes Completar el  campo.</string>
