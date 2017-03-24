@@ -10,14 +10,14 @@
     android:layout_width="wrap_content" 
     android:layout_height="wrap_content"
     android:layout_alignParentLeft="true">
-        <ImageView 
+
+        <ImageView
         android:id="@+id/iconService"
         android:layout_width="20dp"
         android:layout_height="20dp"
         android:layout_marginTop="3dp"
         android:paddingRight="2dp"
         android:contentDescription="icon"
-        android:src="@drawable/ic_call"
         />
 
         <TextView

@@ -12,6 +12,7 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.ActionBarActivity;
+import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -43,7 +44,7 @@ import java.util.Locale;
 import static com.djdevelopment.comidarapidafindit.config.ComidaRapidaApp.TrackerName.APP_TRACKER;
 
 
-public class LocationPickerActivity extends ActionBarActivity {
+public class LocationPickerActivity extends AppCompatActivity {
 
 
     private static final int TAG_CODE_PERMISSION_LOCATION = 0;
@@ -91,16 +92,6 @@ public class LocationPickerActivity extends ActionBarActivity {
 			});
 	        
 	        setUpMap();
-			/*
-	        // Get tracker.
-	        Tracker t = ((ComidaRapidaApp)  getApplication()).getTracker(APP_TRACKER);
-
-	        // Set screen name.
-	       t.setScreenName(LocationPickerActivity.class.toString());
-
-	        // Send a screen view.
-	        t.send(new HitBuilders.AppViewBuilder().build());
-	        */
 		}
 
 	 @Override
@@ -126,7 +117,7 @@ public class LocationPickerActivity extends ActionBarActivity {
              
              return true;
      }
-	    private void changeMapLocation(LatLng latLng, int zoom) {
+	    private void changeMapLocation (LatLng latLng, int zoom) {
 
 	        googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, zoom));
 	        

@@ -121,7 +121,6 @@ public class SuggestActivity extends AppCompatActivity {
 
                         View viewPrices = inflaterItem.inflate(R.layout.item_layout_edit, null, true);
                         TextView serviceName = (TextView)viewPrices.findViewById(R.id.lblTimeOftheLastVote);
-                        ImageView iconImage  = (ImageView) viewPrices.findViewById(R.id.iconService);
                         final TextView servicePrice =(TextView)viewPrices.findViewById(R.id.service_value);
 
                         serviceName.setText(menuService.getMenuName());
@@ -176,8 +175,6 @@ public class SuggestActivity extends AppCompatActivity {
                                 View viewCreditCards = inflaterItem.inflate(R.layout.item_layout_edit, null, true);
                                   TextView txtCreditCard = (TextView) viewCreditCards.findViewById(R.id.lblTimeOftheLastVote);
                                 TextView txtValue = (TextView) viewCreditCards.findViewById(R.id.service_value);
-                                ImageView iconImage  = (ImageView) viewCreditCards.findViewById(R.id.iconService);
-                                iconImage.setImageResource(R.drawable.icons_10);
 
                                 txtCreditCard.setText(creditCardValue);
                                 txtCreditCard.setTypeface(custom_font2);
@@ -222,8 +219,6 @@ public class SuggestActivity extends AppCompatActivity {
                         View viewPhones = inflaterItem.inflate(R.layout.item_layout_edit, null, true);
                         TextView txtPhone = (TextView) viewPhones.findViewById(R.id.lblTimeOftheLastVote);
                         TextView txtValue = (TextView) viewPhones.findViewById(R.id.service_value);
-                        ImageView iconImage  = (ImageView) viewPhones.findViewById(R.id.iconService);
-                        iconImage.setImageResource(R.drawable.icons_07);
 
 
                         txtPhone.setText(phone);

@@ -18,7 +18,7 @@
     <string name="GPSAlertDialogMessage">Mensaje</string>
     <string name="ok">OK</string>
     <string name="label_cancel">label</string>
-    <string name="nameService">Nombre Servicio</string>
+    <string name="nameService">Nombre Producto</string>
     <string name="msInternetNoConnection">No hay conexión a internet.</string>
     <string name="message">Mensaje</string>
     <string name="help">Ayuda</string>

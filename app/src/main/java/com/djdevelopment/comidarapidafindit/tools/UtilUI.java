@@ -30,7 +30,7 @@ public class UtilUI {
     public static MenuService menuService = null;
     public  static String telephone = null;
 
-    public  static MenuService getMenuServiceDialog(final Activity activity, final Runnable callbackPositiveAction ){
+    public static MenuService getMenuServiceDialog(final Activity activity, final Runnable callbackPositiveAction ){
         AlertDialog.Builder builder = new AlertDialog.Builder(activity);
         // Get the layout inflater
 
@@ -57,7 +57,7 @@ public class UtilUI {
         builder.setView(viewRoot) .setNegativeButton(R.string.cancel, null);
         builder.setView(viewRoot) .setPositiveButton(R.string.lblAdd, null);
 
-        final AlertDialog dialog = 			    builder.create();
+        final AlertDialog dialog = builder.create();
         dialog.show();
         //Overriding the handler immediately after show is probably a better approach than OnShowListener as described below
         dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(new View.OnClickListener()

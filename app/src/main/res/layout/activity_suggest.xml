@@ -151,7 +151,7 @@
                     android:id="@+id/lblServices"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Servicios"
+                    android:text="Menú"
                     android:textSize="25sp"
                     android:textColor="#303F9F"
                     android:padding="10dp"
