@@ -1,12 +1,24 @@
 package com.djdevelopment.comidarapidafindit.activitys;
 
+import android.annotation.SuppressLint;
+import android.app.AlertDialog;
+import android.content.ContentUris;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Typeface;
-import android.media.Image;
+import android.net.Uri;
 import android.os.Build;
+import android.os.Environment;
+import android.provider.DocumentsContract;
+import android.provider.MediaStore;
+import android.support.v7.app.ActionBarActivity;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
@@ -16,13 +28,19 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.djdevelopment.comidarapidafindit.R;
+import com.djdevelopment.comidarapidafindit.data.Image;
 import com.djdevelopment.comidarapidafindit.data.MenuService;
 import com.djdevelopment.comidarapidafindit.tools.UtilUI;
+import com.google.android.gms.maps.model.LatLng;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 
 public class SuggestActivity extends AppCompatActivity {
 
+    final Context context = this;
     private ArrayList<MenuService> menuServices;
     LayoutInflater inflaterItem = null;
     private Typeface custom_font2 = null;
@@ -30,8 +48,11 @@ public class SuggestActivity extends AppCompatActivity {
     private ArrayList<String> telephones = null;
     private ArrayList<String> creditCards = null;
     private ArrayList<Image> imagesList = null;
+    private LatLng selectMotelLatLng = null;
+    LinearLayout cardViewImages = null;
     LinearLayout cardViewServicesTelephons = null;
     LinearLayout cardViewCreditCards = null;
+    LinearLayout cardViewLocation = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,6 +68,7 @@ public class SuggestActivity extends AppCompatActivity {
         cardViewServices =  (LinearLayout)findViewById(R.id.cardViewServicesPrices);
         cardViewServicesTelephons =  (LinearLayout) findViewById(R.id.cardViewServicesTelephons);
         cardViewCreditCards =  (LinearLayout)findViewById(R.id.cardViewCreditCards);
+        cardViewLocation =  (LinearLayout)findViewById(R.id.cardViewLocation);
 
         menuServices = new ArrayList<>();
         custom_font2 = Typeface.createFromAsset(SuggestActivity.this.getAssets(), "Roboto-Thin.ttf");
@@ -76,7 +98,7 @@ public class SuggestActivity extends AppCompatActivity {
             public void onClick(View v) {
                 v.requestFocus();
                 Intent intent =  new Intent( SuggestActivity.this, LocationPickerActivity.class);
-                startActivityForResult(intent, 11);
+                startActivityForResult(intent,11);
 
             }
         });
@@ -152,7 +174,7 @@ public class SuggestActivity extends AppCompatActivity {
                             if(creditCards.indexOf(creditCardValue) == -1){
                                 creditCards.add(creditCardValue);
                                 View viewCreditCards = inflaterItem.inflate(R.layout.item_layout_edit, null, true);
-                                TextView txtCreditCard = (TextView) viewCreditCards.findViewById(R.id.lblTimeOftheLastVote);
+                                  TextView txtCreditCard = (TextView) viewCreditCards.findViewById(R.id.lblTimeOftheLastVote);
                                 TextView txtValue = (TextView) viewCreditCards.findViewById(R.id.service_value);
                                 ImageView iconImage  = (ImageView) viewCreditCards.findViewById(R.id.iconService);
                                 iconImage.setImageResource(R.drawable.icons_10);
@@ -269,4 +291,221 @@ public class SuggestActivity extends AppCompatActivity {
             }
         });
     }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+
+        if(requestCode == 10  && resultCode == RESULT_OK) {
+
+
+            if(data!=null && data.getData() !=null){
+
+                showInputDialogAndAddElement(data);
+
+
+            }
+        }
+
+        if(requestCode == 11  && resultCode == RESULT_OK){
+            if(data!=null && data.getExtras().containsKey("userPosition")){
+
+
+
+                cardViewLocation.removeAllViews();
+                selectMotelLatLng = null;
+
+                LatLng selectMotelPosition = (LatLng) data.getExtras().get("userPosition");
+                selectMotelLatLng = selectMotelPosition;
+
+                View viewPrices = inflaterItem.inflate(R.layout.item_layout_edit, null, true);
+                TextView serviceName = (TextView)viewPrices.findViewById(R.id.lblTimeOftheLastVote);
+                ImageView iconImage  = (ImageView) viewPrices.findViewById(R.id.iconService);
+                String 	address = (String) data.getExtras().get("address");
+                final TextView servicePrice =(TextView)viewPrices.findViewById(R.id.service_value);
+                servicePrice.setVisibility(View.GONE);
+
+                iconImage.setImageResource(R.drawable.icons_03);
+
+
+                serviceName.setTypeface(custom_font2);
+                serviceName.setText((address!=null && address.length() != 0) ? address : "Lat "+selectMotelLatLng.latitude +" Lon "+selectMotelLatLng.longitude);
+                cardViewLocation.addView(viewPrices);
+
+            }
+        }
+
+    }
+
+    protected void showInputDialogAndAddElement(final Intent data) {
+
+        // get prompts.xml view
+        LayoutInflater layoutInflater = LayoutInflater.from(context);
+        View promptView = layoutInflater.inflate(R.layout.input_dialog, null);
+        AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(context);
+        alertDialogBuilder.setView(promptView);
+
+        final TextView editText = (TextView) promptView.findViewById(R.id.editTextDescription);
+        // setup a dialog window
+        alertDialogBuilder.setCancelable(false)
+                .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                        //resultText.setText("Hello, " + editText.getText());
+
+                        try {
+                            String urlImage = getPath(context,data.getData());
+                            View viewImages = inflaterItem.inflate(R.layout.item_layout_edit_images, null, true);
+                            ImageView imageItem = (ImageView) viewImages.findViewById(R.id.imageItem);
+                            TextView txtValue = (TextView) viewImages.findViewById(R.id.service_value);
+                            final TextView txtDescription = (TextView) viewImages.findViewById(R.id.imageDescription);
+                            txtDescription.setText(editText.getText().toString());
+                            txtValue.setOnClickListener(new View.OnClickListener() {
+
+                                @Override
+                                public void onClick(View v) {
+                                    RelativeLayout r = (RelativeLayout)v.getParent();
+                                    int index  = cardViewImages.indexOfChild(r);
+                                    cardViewImages.removeViewAt(index);
+                                    imagesList.remove(index);
+                                }
+                            });
+
+
+                            cardViewImages.addView(viewImages);
+
+                            InputStream stream = getContentResolver().openInputStream(
+                                    data.getData());
+                            final Bitmap bitmap = BitmapFactory.decodeStream(stream);
+                            stream.close();
+                            //imageItem.setImageBitmap(BitmapFactory.decodeFile(picturePath));
+                            imageItem.setImageBitmap(bitmap);
+                            Image imageObj = new Image();
+                            imageObj.setUrl(urlImage);
+                            imageObj.setDescription(editText.getText().toString());
+                            imagesList.add(imageObj);
+                        } catch (FileNotFoundException e) {
+                            Log.i("photo", e.toString());
+                        } catch (IOException e) {
+                            Log.i("photo", e.toString());
+                        } catch (Exception e) {
+                            Log.i("photo", e.toString());
+                        }
+
+                    }
+                })/*
+				.setNegativeButton("Cancel",
+						new DialogInterface.OnClickListener() {
+							public void onClick(DialogInterface dialog, int id) {
+								dialog.cancel();
+							}
+						})*/;
+
+        // create an alert dialog
+        AlertDialog alert = alertDialogBuilder.create();
+        alert.show();
+    }
+
+    public static boolean isExternalStorageDocument(Uri uri) {
+        return "com.android.externalstorage.documents".equals(uri.getAuthority());
+    }
+
+    public static boolean isDownloadsDocument(Uri uri) {
+        return "com.android.providers.downloads.documents".equals(uri.getAuthority());
+    }
+
+    public static boolean isMediaDocument(Uri uri) {
+        return "com.android.providers.media.documents".equals(uri.getAuthority());
+    }
+
+    public static boolean isGooglePhotosUri(Uri uri) {
+        return "com.google.android.apps.photos.content".equals(uri.getAuthority());
+    }
+
+    public static String getDataColumn(Context context, Uri uri, String selection, String[] selectionArgs) {
+
+        Cursor cursor = null;
+        final String column = "_data";
+        final String[] projection = {
+                column
+        };
+
+        try {
+            cursor = context.getContentResolver().query(uri, projection, selection, selectionArgs,
+                    null);
+            if (cursor != null && cursor.moveToFirst()) {
+                final int index = cursor.getColumnIndexOrThrow(column);
+                return cursor.getString(index);
+            }
+        } finally {
+            if (cursor != null)
+                cursor.close();
+        }
+        return null;
+    }
+
+    @SuppressLint("NewApi")
+    public static String getPath(final Context context, final Uri uri) {
+
+        final boolean isKitKat = Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT;
+
+        // DocumentProvider
+        if (isKitKat && DocumentsContract.isDocumentUri(context, uri)) {
+            // ExternalStorageProvider
+            if (isExternalStorageDocument(uri)) {
+                final String docId = DocumentsContract.getDocumentId(uri);
+                final String[] split = docId.split(":");
+                final String type = split[0];
+
+                if ("primary".equalsIgnoreCase(type)) {
+                    return Environment.getExternalStorageDirectory() + "/" + split[1];
+                }
+
+            }
+            else if (isDownloadsDocument(uri)) {
+
+                final String id = DocumentsContract.getDocumentId(uri);
+                final Uri contentUri = ContentUris.withAppendedId(
+                        Uri.parse("content://downloads/public_downloads"), Long.valueOf(id));
+
+                return getDataColumn(context, contentUri, null, null);
+            }
+            // MediaProvider
+            else if (isMediaDocument(uri)) {
+                final String docId = DocumentsContract.getDocumentId(uri);
+                final String[] split = docId.split(":");
+                final String type = split[0];
+
+                Uri contentUri = null;
+                if ("image".equals(type)) {
+                    contentUri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
+                } else if ("video".equals(type)) {
+                    contentUri = MediaStore.Video.Media.EXTERNAL_CONTENT_URI;
+                } else if ("audio".equals(type)) {
+                    contentUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
+                }
+
+                final String selection = "_id=?";
+                final String[] selectionArgs = new String[] {
+                        split[1]
+                };
+
+                return getDataColumn(context, contentUri, selection, selectionArgs);
+            }
+        }
+        // MediaStore (and general)
+        else if ("content".equalsIgnoreCase(uri.getScheme())) {
+
+            // Return the remote address
+            if (isGooglePhotosUri(uri))
+                return uri.getLastPathSegment();
+
+            return getDataColumn(context, uri, null, null);
+        }
+        // File
+        else if ("file".equalsIgnoreCase(uri.getScheme())) {
+            return uri.getPath();
+        }
+
+        return null;
+    }
+
 }

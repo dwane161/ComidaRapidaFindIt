@@ -91,7 +91,7 @@ public class LocationPickerActivity extends ActionBarActivity {
 			});
 	        
 	        setUpMap();
-
+			/*
 	        // Get tracker.
 	        Tracker t = ((ComidaRapidaApp)  getApplication()).getTracker(APP_TRACKER);
 
@@ -100,6 +100,7 @@ public class LocationPickerActivity extends ActionBarActivity {
 
 	        // Send a screen view.
 	        t.send(new HitBuilders.AppViewBuilder().build());
+	        */
 		}
 
 	 @Override

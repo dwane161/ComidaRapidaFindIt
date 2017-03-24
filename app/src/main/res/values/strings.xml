@@ -143,4 +143,8 @@
 
     <string name="pref_title_vibrate">Vibrate</string>
     <string name="title_activity_suggest_place">Map</string>
+
+
+    <string name="image_description">Descripción de la imagen sugerida</string>
+    <string name="description_hint">Escriba una descripción..</string>
 </resources>
