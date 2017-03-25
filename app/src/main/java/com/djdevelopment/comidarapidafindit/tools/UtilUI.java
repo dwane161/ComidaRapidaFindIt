@@ -75,7 +75,8 @@ public class UtilUI {
                     menuService = new MenuService(txtMotelServiceName.getText().toString(),  Double.parseDouble(txtMotelServicePrice.getText().toString()),
                             motels_services_currency_type.getSelectedItemPosition());
 
-                    dialog.dismiss();
+                    txtMotelServiceName.setText("");
+                    txtMotelServicePrice.setText("");
                     callbackPositiveAction.run();
 
                 }

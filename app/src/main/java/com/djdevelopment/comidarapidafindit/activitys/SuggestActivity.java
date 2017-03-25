@@ -26,6 +26,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.RatingBar;
 import android.widget.RelativeLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
@@ -33,6 +34,7 @@ import android.widget.TextView;
 import com.djdevelopment.comidarapidafindit.R;
 import com.djdevelopment.comidarapidafindit.data.Image;
 import com.djdevelopment.comidarapidafindit.data.MenuService;
+import com.djdevelopment.comidarapidafindit.data.Restaurants;
 import com.djdevelopment.comidarapidafindit.tools.UtilUI;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.firebase.FirebaseApp;
@@ -54,6 +56,7 @@ public class SuggestActivity extends AppCompatActivity {
     LinearLayout cardViewServices = null;
     private ArrayList<String> telephones = null;
     private EditText txtName  = null;
+    private RatingBar ratingBar = null;
     private ArrayList<String> creditCards = null;
     private ArrayList<Image> imagesList = null;
     private LatLng selectMotelLatLng = null;
@@ -90,16 +93,18 @@ public class SuggestActivity extends AppCompatActivity {
 
 
         txtName =  (EditText) findViewById(R.id.txtName);
+        ratingBar = (RatingBar) findViewById(R.id.ratingBar);
         final Button btnSend = (Button)findViewById(R.id.btnSend);
 
         btnSend.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
                 //Nombre de restaurante
-                String restName = "";
-                String creditCars = "";
-                String telephonesArray = "";
+                String restName;
+                String creditCars;
+                double countStars;
+                String telephonesArray;
+
                 restName = txtName.getText().toString();
 
                 //Localizacion de restaurante
@@ -109,7 +114,7 @@ public class SuggestActivity extends AppCompatActivity {
                 }
                 if(LatLngCoord.isEmpty()){
                     UtilUI.showAlertDialog(SuggestActivity.this, getString(R.string.location_info),getString(R.string.select_location_info) ,R.string.iGotIt,null);
-                    (SuggestActivity.this.findViewById(R.id.lblLocation)).requestFocus();;
+                    (SuggestActivity.this.findViewById(R.id.lblLocation)).requestFocus();
                     ScrollView sv = (ScrollView) SuggestActivity.this.findViewById(R.id.ScrollViewSujectMotel);
                     sv.scrollTo(0, sv.getTop());
                     return ;
@@ -126,6 +131,18 @@ public class SuggestActivity extends AppCompatActivity {
                     }
                     creditCars = TextUtils.join(", ", creditCards.toArray());
                     telephonesArray = TextUtils.join(", ", telephones.toArray());
+
+                    //Rating de restaurante
+                    countStars = ratingBar.getRating();
+
+
+                    Restaurants restaurants = new Restaurants(restName, resMenuArray, LatLngCoord, creditCars, telephonesArray, false, countStars);
+
+                    FirebaseDatabase database = FirebaseDatabase.getInstance();
+                    DatabaseReference myRef = database.getReference();
+
+                    myRef.child("restaurants-suggest").push().setValue(restaurants);
+
                     UtilUI.showAlertDialog(SuggestActivity.this, SuggestActivity.this.getString(R.string.thanksContibution),SuggestActivity.this.getString(R.string.thanksForSubmitInfo), R.string.iGotIt, new Runnable() {
 
                         @Override
@@ -134,9 +151,6 @@ public class SuggestActivity extends AppCompatActivity {
 
                         }
                     });
-
-                    mDatabase = FirebaseDatabase.getInstance().getReferenceFromUrl("https://comidarapida-cae88.firebaseio.com/");
-                    mDatabase.setValue("hola mundo");
                 }
 
             }
@@ -149,8 +163,6 @@ public class SuggestActivity extends AppCompatActivity {
         suggestCreditCards();
         suggestTelephones();
         suggetImage();
-
-
     }
 
     private void addNewFastFood(){

@@ -91,8 +91,8 @@ public class LocationPickerActivity extends AppCompatActivity implements OnMapRe
 					
 				}
 			});
-	        
-	        setUpMap();
+
+		 setUpMap();
 		}
 
 	 @Override
@@ -126,121 +126,105 @@ public class LocationPickerActivity extends AppCompatActivity implements OnMapRe
 	    @Override
 	    public void onResume() {
 	        super.onResume();
-	        setUpMap();
 	    }
 	  private void setUpMap() {
 	        // Do a null check to confirm that we have not already instantiated the map.
-
-	        if (googleMap == null) {
-
-	            googleMap = mMapFragment.getMap();
-
-	            // Check if we were successful in obtaining the map.
-	            if (googleMap != null) {
-	            	LatLng dominicanRepublicLatLng = new LatLng(18.86471, -71.36719);
+				mMapFragment.getMapAsync(this);
+				// Check if we were successful in obtaining the map.
+				if (googleMap != null) {
+					LatLng dominicanRepublicLatLng = new LatLng(18.86471, -71.36719);
 					if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) ==
 							PackageManager.PERMISSION_GRANTED &&
 							ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) ==
 									PackageManager.PERMISSION_GRANTED) {
 						googleMap.setMyLocationEnabled(true);
-					}else {
+					} else {
 
-                        ActivityCompat.requestPermissions(this, new String[] {
-                                        Manifest.permission.ACCESS_FINE_LOCATION,
-                                        Manifest.permission.ACCESS_COARSE_LOCATION },
-                                TAG_CODE_PERMISSION_LOCATION);
-                    }
-	                googleMap.getUiSettings().setCompassEnabled(true);
-	                MarkerOptions marker = new MarkerOptions().position(dominicanRepublicLatLng);
-                    selectedMarker =  googleMap.addMarker(marker);
-                    selectedMarker.setIcon(BitmapDescriptorFactory.fromResource(R.drawable.ic_google_map_marker));
-	                changeMapLocation(dominicanRepublicLatLng,7);
-	                googleMap.setOnMyLocationChangeListener(new GoogleMap.OnMyLocationChangeListener() {
-	                    @Override
-	                    public void onMyLocationChange(Location location) {
+						ActivityCompat.requestPermissions(this, new String[]{
+										Manifest.permission.ACCESS_FINE_LOCATION,
+										Manifest.permission.ACCESS_COARSE_LOCATION},
+								TAG_CODE_PERMISSION_LOCATION);
+					}
+					googleMap.getUiSettings().setCompassEnabled(true);
+					MarkerOptions marker = new MarkerOptions().position(dominicanRepublicLatLng);
+					selectedMarker = googleMap.addMarker(marker);
+					selectedMarker.setIcon(BitmapDescriptorFactory.fromResource(R.drawable.ic_google_map_marker));
+					changeMapLocation(dominicanRepublicLatLng, 7);
+					googleMap.setOnMyLocationChangeListener(new GoogleMap.OnMyLocationChangeListener() {
+						@Override
+						public void onMyLocationChange(Location location) {
 
-	                        LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
-	                        
+							LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
 
 
-	                        userPosition =latLng;
-	                        
+							userPosition = latLng;
 
-	                    }
-	                });
-	                googleMap.setOnMapClickListener(new OnMapClickListener() {
-						
+
+						}
+					});
+					googleMap.setOnMapClickListener(new OnMapClickListener() {
+
 						@Override
 						public void onMapClick(LatLng clickedLat) {
-							
-							if(selectedMarker !=null){
+
+							if (selectedMarker != null) {
 								selectedMarker.setPosition(clickedLat);
 								changeMapLocation(clickedLat, 17);
 								setAddressText();
 							}
-							
+
 						}
 					});
-	              
-	                googleMap.setOnMyLocationChangeListener(new GoogleMap.OnMyLocationChangeListener() {
-	                    @Override
-	                    public void onMyLocationChange(Location location) {
 
-	                        LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
-	                        if(userPosition !=null){
-	                            float []  distance = new float [4];
-	                            float  distanceBetweenUserAndActualPosition =0;
+					googleMap.setOnMyLocationChangeListener(new GoogleMap.OnMyLocationChangeListener() {
+						@Override
+						public void onMyLocationChange(Location location) {
 
-	                            Location.distanceBetween(location.getLatitude(), location.getLongitude(), userPosition.latitude,  userPosition.longitude, distance);
-	                            distanceBetweenUserAndActualPosition = distance[0];
+							LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
+							if (userPosition != null) {
+								float[] distance = new float[4];
+								float distanceBetweenUserAndActualPosition = 0;
 
-	                            if(distanceBetweenUserAndActualPosition >=10){
-	                                drawCircle(latLng);
-	                            }
+								Location.distanceBetween(location.getLatitude(), location.getLongitude(), userPosition.latitude, userPosition.longitude, distance);
+								distanceBetweenUserAndActualPosition = distance[0];
 
-	                        }else{
-	                            drawCircle(latLng);
-	                            setAddressText();
-	                            
-	                        }
-	                        if(!isTheFirstTime && selectedMarker !=null){
-	                        	selectedMarker.setPosition(latLng);
+								if (distanceBetweenUserAndActualPosition >= 10) {
+									drawCircle(latLng);
+								}
+
+							} else {
+								drawCircle(latLng);
+								setAddressText();
+
+							}
+							if (!isTheFirstTime && selectedMarker != null) {
+								selectedMarker.setPosition(latLng);
 								changeMapLocation(latLng, 17);
 								setAddressText();
-	                        
-	                        	isTheFirstTime =true;
-	                        }
 
-	                        userPosition =latLng;
+								isTheFirstTime = true;
+							}
 
-	                    }
-	                });
-	                
-	                
+							userPosition = latLng;
 
-	                
+						}
+					});
 
-	            }
-	        }
+
+				}
+
 	    }
 
 	@Override
 	public void onMapReady(GoogleMap map) {
+		if(!isTheFirstTime) {
+			googleMap = map;
 
-		googleMap = map;
-
-		setUpMaps();
-
+			setUpMap();
+		}
+		isTheFirstTime = true;
 	}
 
-	public void setUpMaps(){
-
-		googleMap.setMapType(GoogleMap.MAP_TYPE_HYBRID);
-		googleMap.setTrafficEnabled(true);
-		googleMap.setIndoorEnabled(true);
-		googleMap.setBuildingsEnabled(true);
-		googleMap.getUiSettings().setZoomControlsEnabled(true);
-	}
 
 	private void setAddressText(){
 		  

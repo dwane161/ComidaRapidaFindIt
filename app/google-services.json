@@ -1,0 +1,99 @@
+{
+  "project_info": {
+    "project_number": "599878823243",
+    "firebase_url": "https://comidarapida-cae88.firebaseio.com",
+    "project_id": "comidarapida-cae88",
+    "storage_bucket": "comidarapida-cae88.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:599878823243:android:79e3edc096ad89e4",
+        "android_client_info": {
+          "package_name": "com.djdevelopment.comidard"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "599878823243-pfgclt30n6aaaras6cmils5d32d4mvet.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.djdevelopment.comidard",
+            "certificate_hash": "4bd84d821cd59cd960744c9b7658f8f0cace6e62"
+          }
+        },
+        {
+          "client_id": "599878823243-aj6quill8ru73tchkpp4nciiq3rl1kd6.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAjgRX9gm-Zcl9om5R6itcQFypGGEy95ZM"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "599878823243-aj6quill8ru73tchkpp4nciiq3rl1kd6.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:599878823243:android:3e820d658992e8a7",
+        "android_client_info": {
+          "package_name": "com.djdevelopment.comidarapidafindit"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "599878823243-2n503aad5caqm0katt1r5m6rrlqd2133.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.djdevelopment.comidarapidafindit",
+            "certificate_hash": "45619ccac9f070cb7369443aaa9821b788c39b38"
+          }
+        },
+        {
+          "client_id": "599878823243-aj6quill8ru73tchkpp4nciiq3rl1kd6.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAjgRX9gm-Zcl9om5R6itcQFypGGEy95ZM"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "599878823243-aj6quill8ru73tchkpp4nciiq3rl1kd6.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
