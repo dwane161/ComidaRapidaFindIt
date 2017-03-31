@@ -17,6 +17,9 @@ public class Restaurants {
     private boolean validated;
     private double rating;
 
+    public Restaurants() {
+    }
+
     public Restaurants(String restName, ArrayList<String> menu, String latLong, String creditCards, String telephones, boolean validated, double rating) {
         this.restName = restName;
         this.menu = menu;

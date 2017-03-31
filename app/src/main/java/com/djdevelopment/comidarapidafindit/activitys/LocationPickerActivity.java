@@ -45,9 +45,11 @@ import java.util.Locale;
 public class LocationPickerActivity extends AppCompatActivity implements OnMapReadyCallback, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
 
 	private static final int MY_PERMISSIONS_REQUEST_READ_CONTACTS = 0;
+	private static final int TAG_CODE_PERMISSION_LOCATION = 0;
 	private GoogleMap googleMap = null;
 	private SupportMapFragment mMapFragment = null;
 	private Marker selectedMarker = null;
+	private LatLng userPosition = null;
 	private TextView txtAddress = null;
 	private String address = null;
 	private boolean isTheFirstTime = false;
@@ -124,35 +126,42 @@ public class LocationPickerActivity extends AppCompatActivity implements OnMapRe
 		mMapFragment.getMapAsync(this);
 		// Check if we were successful in obtaining the map.
 		if (googleMap != null) {
-			mGoogleApiClient.connect();
-			changeMapLocation(locationUser,10);
-			if (ActivityCompat.shouldShowRequestPermissionRationale(this,
-					Manifest.permission.ACCESS_COARSE_LOCATION)) {
-
-
-
+			LatLng dominicanRepublicLatLng = new LatLng(18.86471, -71.36719);
+			if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) ==
+					PackageManager.PERMISSION_GRANTED &&
+					ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) ==
+							PackageManager.PERMISSION_GRANTED) {
+				googleMap.setMyLocationEnabled(true);
 			} else {
 
-
-				ActivityCompat.requestPermissions(this,
-						new String[]{Manifest.permission.ACCESS_COARSE_LOCATION},
-						MY_PERMISSIONS_REQUEST_READ_CONTACTS);
-
-				// MY_PERMISSIONS_REQUEST_READ_CONTACTS is an
-				// app-defined int constant. The callback method gets the
-				// result of the request.
+				ActivityCompat.requestPermissions(this, new String[]{
+								Manifest.permission.ACCESS_FINE_LOCATION,
+								Manifest.permission.ACCESS_COARSE_LOCATION},
+						TAG_CODE_PERMISSION_LOCATION);
 			}
 			googleMap.getUiSettings().setCompassEnabled(true);
-			MarkerOptions marker = new MarkerOptions().position(locationUser);
+			MarkerOptions marker = new MarkerOptions().position(dominicanRepublicLatLng);
 			selectedMarker = googleMap.addMarker(marker);
 			selectedMarker.setIcon(BitmapDescriptorFactory.fromResource(R.drawable.ic_google_map_marker));
+			changeMapLocation(dominicanRepublicLatLng, 7);
+			googleMap.setOnMyLocationChangeListener(new GoogleMap.OnMyLocationChangeListener() {
+				@Override
+				public void onMyLocationChange(Location location) {
 
+					LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
+
+
+					userPosition = latLng;
+
+
+				}
+			});
 			googleMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
 
 				@Override
 				public void onMapClick(LatLng clickedLat) {
 
-					if(selectedMarker !=null){
+					if (selectedMarker != null) {
 						selectedMarker.setPosition(clickedLat);
 						changeMapLocation(clickedLat, 17);
 						setAddressText();
@@ -160,9 +169,10 @@ public class LocationPickerActivity extends AppCompatActivity implements OnMapRe
 
 				}
 			});
+
 		}
 
-	}
+		}
 
 	private void changeMapLocation(LatLng latLng, int zoom) {
 
