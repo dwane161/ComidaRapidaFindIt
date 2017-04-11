@@ -127,7 +127,7 @@ public class SuggestActivity extends AppCompatActivity {
 
 
                     for(MenuService menu: menuServices){
-                        resMenuArray.add("{name: '"+ menu.getMenuName() + "', price: '" + menu.getPrice() +"', currency: '" + menu.getCurrencyType() + "'}");
+                        resMenuArray.add("{\"name\": \""+ menu.getMenuName() + "\", \"price\": \"" + menu.getPrice() +"\", \"currency\": \"" + menu.getCurrencyType() + "\"}");
                     }
                     creditCars = TextUtils.join(", ", creditCards.toArray());
                     telephonesArray = TextUtils.join(", ", telephones.toArray());

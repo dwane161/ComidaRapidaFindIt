@@ -2,4 +2,8 @@
     <string name="google_maps_key" templateMergeStrategy="preserve" translatable="false">
         AIzaSyBkVFDwVKEuut5V4KYcq4GvspCLZzwEV-g
     </string>
+
+    <string name="google_direcction_key" templateMergeStrategy="preserve" translatable="false">
+        AIzaSyAseOR6uttx9_AMO89pcG2WzaT-Bl6zMWA
+    </string>
 </resources>

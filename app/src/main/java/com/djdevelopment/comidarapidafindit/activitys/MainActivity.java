@@ -3,46 +3,74 @@ package com.djdevelopment.comidarapidafindit.activitys;
 import android.Manifest;
 import android.animation.ArgbEvaluator;
 import android.animation.ValueAnimator;
+import android.content.ContentResolver;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.drawable.Drawable;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.net.MailTo;
+import android.os.Build;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomSheetBehavior;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.graphics.drawable.DrawableCompat;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.AppCompatDrawableManager;
 import android.support.v7.widget.Toolbar;
+import android.util.JsonReader;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.RatingBar;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import com.afollestad.materialdialogs.MaterialDialog;
+import com.akexorcist.googledirection.DirectionCallback;
+import com.akexorcist.googledirection.GoogleDirection;
+import com.akexorcist.googledirection.constant.TransportMode;
+import com.akexorcist.googledirection.model.Direction;
+import com.akexorcist.googledirection.model.Leg;
+import com.akexorcist.googledirection.model.Route;
+import com.akexorcist.googledirection.util.DirectionConverter;
 import com.djdevelopment.comidarapidafindit.R;
 import com.djdevelopment.comidarapidafindit.data.Restaurants;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.Polyline;
+import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -68,9 +96,18 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     LinearLayout linearLayoutPrincipal;
     RelativeLayout relativeLayoutBottomSheet;
     FloatingActionButton floatingActionButton;
+    Button btnMostarMenu;
 
     //Location configuration
     LocationManager mLocationManager;
+
+    int markerSelected;
+
+    PolylineOptions polylineOptions;
+
+    LatLng locationUser;
+
+    Polyline polyline;
 
     ArrayList<Restaurants> restaurants = new ArrayList<>();
     int index = 0;
@@ -92,7 +129,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         navigationView.setNavigationItemSelectedListener(this);
 
 
-        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
+        final SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
 
@@ -107,6 +144,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         linearLayoutPrincipal = (LinearLayout) findViewById(R.id.linearLayoutPrincipal);
         lblTelephone = (TextView) findViewById(R.id.lblTelephone);
         floatingActionButton = (FloatingActionButton) findViewById(R.id.floatingActionButton);
+        btnMostarMenu =  (Button) findViewById(R.id.btnMostrarMenu);
 
         floatingActionButton.setVisibility(FloatingActionButton.INVISIBLE);
 
@@ -158,6 +196,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         myRef.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
+
+                restaurants.clear();
+                index = 0;
                 for(final DataSnapshot dataSnapshotchild : dataSnapshot.getChildren()){
                     try {
 
@@ -170,21 +211,51 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                             String latitud = words[0].substring(10);
                             String longitud = words[1].replace(")", "");
                             LatLng latLng = new LatLng(Double.parseDouble(latitud), Double.parseDouble(longitud));
+
                             mMap.addMarker(new MarkerOptions()
                                     .position(latLng)
                                     .title(dataSnapshotchild.child("restName").getValue().toString())
-                                    .snippet(String.valueOf(index)));
+                                    .snippet(String.valueOf(index))
+                                    .icon(BitmapDescriptorFactory.fromBitmap(getBitmapFromVectorDrawable(MainActivity.this,R.drawable.ic_placeholder))));
                             index++;
                             mMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
                                 @Override
                                 public boolean onMarkerClick(Marker marker) {
+
                                     //TODO AGREGAR LOS DEMAS CAMPOS DEL RESTAURANTE
-                                     bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
-                                    txtBottomSheet.setText(restaurants.get(Integer.parseInt(marker.getSnippet())).getRestName());
-                                    txtRating.setText(String.valueOf(restaurants.get(Integer.parseInt(marker.getSnippet())).getRating()));
-                                    txtCreditCards.setText(restaurants.get(Integer.parseInt(marker.getSnippet())).getCreditCards());
-                                    ratingBarBottom.setRating((float)restaurants.get(Integer.parseInt(marker.getSnippet())).getRating());
-                                    lblTelephone.setText(restaurants.get(Integer.parseInt(marker.getSnippet())).getTelephones());
+                                    markerSelected = Integer.parseInt(marker.getSnippet());
+                                    bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
+                                    txtBottomSheet.setText(restaurants.get(markerSelected).getRestName());
+                                    txtRating.setText(String.valueOf(restaurants.get(markerSelected).getRating()));
+                                    txtCreditCards.setText(restaurants.get(markerSelected).getCreditCards());
+                                    ratingBarBottom.setRating((float)restaurants.get(markerSelected).getRating());
+                                    lblTelephone.setText(restaurants.get(markerSelected).getTelephones());
+
+                                    LatLng positionMarker = marker.getPosition();
+
+                                    GoogleDirection.withServerKey("AIzaSyAseOR6uttx9_AMO89pcG2WzaT-Bl6zMWA")
+                                            .from(locationUser)
+                                            .to(positionMarker)
+                                            .transportMode(TransportMode.DRIVING)
+                                            .execute(new DirectionCallback() {
+                                                @Override
+                                                public void onDirectionSuccess(Direction direction, String rawBody) {
+                                                    if(direction.isOK()){
+                                                        Route route = direction.getRouteList().get(0);
+                                                        Leg leg = route.getLegList().get(0);
+
+                                                        ArrayList<LatLng> directionPositionList = leg.getDirectionPoint();
+                                                        polylineOptions = DirectionConverter.createPolyline(MainActivity.this, directionPositionList, 5, Color.RED);
+                                                    }
+                                                }
+
+                                                @Override
+                                                public void onDirectionFailure(Throwable t) {
+
+                                                }
+                                            });
+
+
                                     return true;
                                 }
                             });
@@ -194,6 +265,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         ex.getMessage();
                     }
                 }
+
             }
 
             @Override
@@ -202,7 +274,32 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
         });
 
+        floatingActionButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                polyline =  mMap.addPolyline(polylineOptions);
+            }
+        });
 
+        btnMostarMenu.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                ArrayList<String> namePriceList = new ArrayList<>();
+
+                for(String restMenu : restaurants.get(markerSelected).getMenu()){
+                    try {
+                        JSONObject jObj = new JSONObject(restMenu);
+                        namePriceList.add(jObj.getString("name") +"\nRD$ "+ jObj.getString("price"));
+                    } catch (JSONException e) {
+                        Log.e("MYAPP", "unexpected JSON exception", e);
+                    }
+                }
+                new MaterialDialog.Builder(MainActivity.this)
+                        .title("Menu")
+                        .items(namePriceList)
+                        .show();
+            }
+        });
     }
 
     @Override
@@ -214,6 +311,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             @Override
             public void onMapClick(LatLng latLng) {
                 bottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
+                polyline.remove();
             }
         });
         //Check permission before getLocation of user
@@ -233,7 +331,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         //Location of the user
         Location location = getLastKnownLocation();
-        LatLng locationUser = new LatLng(location.getLatitude(),location.getLongitude());
+        locationUser = new LatLng(location.getLatitude(),location.getLongitude());
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(locationUser,15));
     }
 
@@ -333,6 +431,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         //remove location callback:
         mLocationManager.removeUpdates(this);
 
+
     }
 
     @Override
@@ -369,6 +468,21 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
         }
         return bestLocation;
+    }
+
+    public static Bitmap getBitmapFromVectorDrawable(Context context, int drawableId) {
+        Drawable drawable = AppCompatDrawableManager.get().getDrawable(context, drawableId);
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+            drawable = (DrawableCompat.wrap(drawable)).mutate();
+        }
+
+        Bitmap bitmap = Bitmap.createBitmap(drawable.getIntrinsicWidth(),
+                drawable.getIntrinsicHeight(), Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(bitmap);
+        drawable.setBounds(0, 0, canvas.getWidth(), canvas.getHeight());
+        drawable.draw(canvas);
+
+        return bitmap;
     }
 
 }
