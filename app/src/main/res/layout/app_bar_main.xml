@@ -21,8 +21,22 @@
 
     </android.support.design.widget.AppBarLayout>
 
-    <include layout="@layout/content_main" />
+    <include layout="@layout/content_main"
+        android:id="@+id/include" />
 
-    <include layout="@layout/bottom_sheet_main" />
+    <include layout="@layout/bottom_sheet_main"
+        android:id="@+id/bottomSheet" />
+
+    <android.support.design.widget.FloatingActionButton
+        android:id="@+id/floatingActionButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_vertical|center_horizontal"
+        android:clickable="true"
+        android:layout_marginRight="13dp"
+        app:fabSize="normal"
+        app:layout_anchor="@+id/bottomSheet"
+        app:layout_anchorGravity="top|right"
+        app:srcCompat="@drawable/ic_car_compact" />
 
 </android.support.design.widget.CoordinatorLayout>

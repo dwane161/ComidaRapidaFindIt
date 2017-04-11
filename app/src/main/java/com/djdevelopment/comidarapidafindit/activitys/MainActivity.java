@@ -1,6 +1,7 @@
 package com.djdevelopment.comidarapidafindit.activitys;
 
 import android.Manifest;
+import android.animation.ArgbEvaluator;
 import android.animation.ValueAnimator;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -11,6 +12,7 @@ import android.location.LocationManager;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomSheetBehavior;
+import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
@@ -42,6 +44,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener, OnMapReadyCallback, LocationListener {
@@ -60,13 +63,17 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     //BottonSheet view
     private BottomSheetBehavior bottomSheetBehavior;
     View bottomSheet;
-    TextView txtBottomSheet, txtRating, txtCreditCards;
+    TextView txtBottomSheet, txtRating, txtCreditCards, lblTelephone;
     RatingBar ratingBarBottom;
     LinearLayout linearLayoutPrincipal;
     RelativeLayout relativeLayoutBottomSheet;
+    FloatingActionButton floatingActionButton;
 
     //Location configuration
     LocationManager mLocationManager;
+
+    ArrayList<Restaurants> restaurants = new ArrayList<>();
+    int index = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -98,7 +105,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         ratingBarBottom = (RatingBar) findViewById(R.id.ratingBarBottom);
         txtCreditCards = (TextView) findViewById(R.id.txtCreditCard);
         linearLayoutPrincipal = (LinearLayout) findViewById(R.id.linearLayoutPrincipal);
+        lblTelephone = (TextView) findViewById(R.id.lblTelephone);
+        floatingActionButton = (FloatingActionButton) findViewById(R.id.floatingActionButton);
 
+        floatingActionButton.setVisibility(FloatingActionButton.INVISIBLE);
 
         //Put BottomSheet Hidden when the app begin
         bottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
@@ -116,58 +126,34 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                 }
                 else if (newState == BottomSheetBehavior.STATE_COLLAPSED){
-                    final float[] from = new float[3],
-                            to =   new float[3];
+                    int colorFrom = Color.rgb(50,146,248);
+                    int colorTo = Color.rgb(255,255,255);
+                    ValueAnimator colorAnimation = ValueAnimator.ofObject(new ArgbEvaluator(), colorFrom, colorTo);
+                    colorAnimation.setDuration(200); // milliseconds
+                    colorAnimation.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
 
-                    Color.colorToHSV(Color.parseColor("#3292F8"), from);   // from white
-                    Color.colorToHSV(Color.parseColor("#FFFFFF"), to);     // to red
-
-                    ValueAnimator anim = ValueAnimator.ofFloat(0, 3);   // animate from 0 to 1
-                    anim.setDuration(400);                              // for 300 ms
-
-                    final float[] hsv  = new float[3];                  // transition color
-                    anim.addUpdateListener(new ValueAnimator.AnimatorUpdateListener(){
-                        @Override public void onAnimationUpdate(ValueAnimator animation) {
-                            // Transition along each axis of HSV (hue, saturation, value)
-                            hsv[0] = from[0] + (to[0] - from[0])*animation.getAnimatedFraction();
-                            hsv[1] = from[1] + (to[1] - from[1])*animation.getAnimatedFraction();
-                            hsv[2] = from[2] + (to[2] - from[2])*animation.getAnimatedFraction();
-
-                            bottomSheet.setBackgroundColor(Color.HSVToColor(hsv));
+                        @Override
+                        public void onAnimationUpdate(ValueAnimator animator) {
+                            bottomSheet.setBackgroundColor((int) animator.getAnimatedValue());
                         }
-                    });
 
-                    anim.start();
+                    });
+                    colorAnimation.start();
+
                     relativeLayoutBottomSheet.setBackgroundColor(Color.rgb(255,255,255));
+
+                    floatingActionButton.setVisibility(FloatingActionButton.VISIBLE);
+                }
+                else if (newState == BottomSheetBehavior.STATE_HIDDEN){
+                    floatingActionButton.setVisibility(FloatingActionButton.INVISIBLE);
                 }
             }
-            /*
-                new Thread() {
-                        int color = 0;
-                        public void run() {
-                            for (color = 0; color <= 255; color++) {
-                                try {
-                                    sleep(1);
-                                    runOnUiThread(new Runnable() {
-                                        @Override
-                                        public void run() {
-                                            relativeLayoutBottomSheet.setBackgroundColor(Color.argb(255,
-                                                    color, color, color));
-                                        }
-                                    });
-                                } catch (InterruptedException e) {
-                                    e.printStackTrace();
-                                }
-                            }
-                        }
-                    }.start();
-             */
+
             @Override
             public void onSlide(@NonNull View bottomSheet, float slideOffset) {
 
             }
         });
-
         //Firebase data retrieve
         myRef.addValueEventListener(new ValueEventListener() {
             @Override
@@ -178,7 +164,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         if(dataSnapshotchild.child("validated").getValue().toString().equals("true")) {
 
                             restaurant = dataSnapshotchild.getValue(Restaurants.class);
-
+                            restaurants.add(restaurant);
                             String latLong = dataSnapshotchild.child("latLong").getValue().toString();
                             String[] words = latLong.split(",");
                             String latitud = words[0].substring(10);
@@ -187,17 +173,18 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                             mMap.addMarker(new MarkerOptions()
                                     .position(latLng)
                                     .title(dataSnapshotchild.child("restName").getValue().toString())
-                                    .snippet(dataSnapshotchild.child("rating").getValue().toString()));
-
+                                    .snippet(String.valueOf(index)));
+                            index++;
                             mMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
                                 @Override
                                 public boolean onMarkerClick(Marker marker) {
                                     //TODO AGREGAR LOS DEMAS CAMPOS DEL RESTAURANTE
-                                    bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
-                                    txtBottomSheet.setText(marker.getTitle());
-                                    txtRating.setText(marker.getSnippet());
-                                    txtCreditCards.setText(restaurant.getCreditCards());
-                                    ratingBarBottom.setNumStars(Integer.parseInt(marker.getSnippet()));
+                                     bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
+                                    txtBottomSheet.setText(restaurants.get(Integer.parseInt(marker.getSnippet())).getRestName());
+                                    txtRating.setText(String.valueOf(restaurants.get(Integer.parseInt(marker.getSnippet())).getRating()));
+                                    txtCreditCards.setText(restaurants.get(Integer.parseInt(marker.getSnippet())).getCreditCards());
+                                    ratingBarBottom.setRating((float)restaurants.get(Integer.parseInt(marker.getSnippet())).getRating());
+                                    lblTelephone.setText(restaurants.get(Integer.parseInt(marker.getSnippet())).getTelephones());
                                     return true;
                                 }
                             });
