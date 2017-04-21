@@ -39,4 +39,16 @@
         app:layout_anchorGravity="top|right"
         app:srcCompat="@drawable/ic_car_compact" />
 
+    <com.stfalcon.multiimageview.MultiImageView
+        android:id="@+id/imageViewDescription"
+        android:layout_width="120dp"
+        android:clickable="true"
+        android:layout_height="80dp"
+        android:layout_gravity="top|end"
+        android:layout_marginStart="10dp"
+        android:layout_marginLeft="10dp"
+        app:layout_anchor="@+id/bottomSheet"
+        app:layout_anchorGravity="top|left"/>
+
+
 </android.support.design.widget.CoordinatorLayout>

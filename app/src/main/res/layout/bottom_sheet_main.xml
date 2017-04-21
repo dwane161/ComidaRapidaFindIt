@@ -104,6 +104,25 @@
                     android:layout_height="wrap_content"/>
             </LinearLayout>
 
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/selector_xml_name"
+                android:layout_weight="5"
+                android:orientation="vertical">
+
+                <Button
+                    android:layout_width="match_parent"
+                    android:id="@+id/btnRating"
+                    android:background="@drawable/selector_xml_name"
+                    android:drawableTop="@drawable/ic_star"
+                    android:textAlignment="center"
+                    android:text="Rating"
+                    android:layout_gravity="center"
+                    android:gravity="left|center_vertical"
+                    android:layout_height="wrap_content"/>
+            </LinearLayout>
+
         </LinearLayout>
 
         <LinearLayout
@@ -196,6 +215,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
+            android:id="@+id/linearLayoutTelefono"
             android:layout_marginTop="15dp"
             android:paddingLeft="10dp"
             android:layout_below="@+id/linearLayoutMenu"
@@ -215,6 +235,7 @@
                 android:paddingLeft="10dp"
                 android:text="TextView de prueba" />
         </LinearLayout>
+
 
     </RelativeLayout>
 

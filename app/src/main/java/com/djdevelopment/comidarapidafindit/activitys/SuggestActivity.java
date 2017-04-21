@@ -15,10 +15,10 @@ import android.os.Build;
 import android.os.Environment;
 import android.provider.DocumentsContract;
 import android.provider.MediaStore;
-import android.support.v7.app.ActionBarActivity;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.util.Base64;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -37,11 +37,10 @@ import com.djdevelopment.comidarapidafindit.data.MenuService;
 import com.djdevelopment.comidarapidafindit.data.Restaurants;
 import com.djdevelopment.comidarapidafindit.tools.UtilUI;
 import com.google.android.gms.maps.model.LatLng;
-import com.google.firebase.FirebaseApp;
-import com.google.firebase.FirebaseOptions;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
+import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -66,6 +65,8 @@ public class SuggestActivity extends AppCompatActivity {
     LinearLayout cardViewLocation = null;
     private DatabaseReference mDatabase;
 
+    String urlImage;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -79,6 +80,7 @@ public class SuggestActivity extends AppCompatActivity {
 
         cardViewServices =  (LinearLayout)findViewById(R.id.cardViewServicesPrices);
         cardViewServicesTelephons =  (LinearLayout) findViewById(R.id.cardViewServicesTelephons);
+        cardViewImages =  (LinearLayout) findViewById(R.id.cardViewImages);
         cardViewCreditCards =  (LinearLayout)findViewById(R.id.cardViewCreditCards);
         cardViewLocation =  (LinearLayout)findViewById(R.id.cardViewLocation);
 
@@ -124,6 +126,7 @@ public class SuggestActivity extends AppCompatActivity {
                         && UtilUI.validateInternetConnetion(SuggestActivity.this,null)){
 
                     ArrayList<String> resMenuArray = new ArrayList<>();
+                    ArrayList<String> imageList = new ArrayList<>();
 
 
                     for(MenuService menu: menuServices){
@@ -135,8 +138,22 @@ public class SuggestActivity extends AppCompatActivity {
                     //Rating de restaurante
                     countStars = ratingBar.getRating();
 
+                    BitmapFactory.Options options = new BitmapFactory.Options();
+                    Bitmap bitmap;
+                    ByteArrayOutputStream baos;
 
-                    Restaurants restaurants = new Restaurants(restName, resMenuArray, LatLngCoord, creditCars, telephonesArray, false, countStars);
+                    for(Image images:imagesList){
+                        options.inSampleSize = 8; // shrink it down otherwise we will use stupid amounts of memory
+                        bitmap = BitmapFactory.decodeFile(images.getUrl(), options);
+                        baos = new ByteArrayOutputStream();
+                        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
+                        byte[] bytes = baos.toByteArray();
+                        String base64Image = Base64.encodeToString(bytes, Base64.DEFAULT);
+                        imageList.add(base64Image);
+                    }
+
+
+                    Restaurants restaurants = new Restaurants(restName, resMenuArray, LatLngCoord, creditCars, telephonesArray, false, countStars, imageList);
 
                     FirebaseDatabase database = FirebaseDatabase.getInstance();
                     DatabaseReference myRef = database.getReference();
@@ -327,7 +344,7 @@ public class SuggestActivity extends AppCompatActivity {
     }
 
     private void suggetImage(){
-        ((Button)findViewById(R.id.btnAddImage)).setOnClickListener(new View.OnClickListener() {
+        (findViewById(R.id.btnAddImage)).setOnClickListener(new View.OnClickListener() {
 
             @Override
             public void onClick(View v) {
@@ -356,7 +373,6 @@ public class SuggestActivity extends AppCompatActivity {
                 }
 
                 startActivityForResult(intent, 10);
-
 
             }
         });
@@ -396,7 +412,6 @@ public class SuggestActivity extends AppCompatActivity {
 
                 iconImage.setImageResource(R.drawable.icons_03);
 
-
                 serviceName.setTypeface(custom_font2);
                 serviceName.setText((address!=null && address.length() != 0) ? address : "Lat "+selectMotelLatLng.latitude +" Lon "+selectMotelLatLng.longitude);
                 cardViewLocation.addView(viewPrices);
@@ -422,14 +437,14 @@ public class SuggestActivity extends AppCompatActivity {
                         //resultText.setText("Hello, " + editText.getText());
 
                         try {
-                            String urlImage = getPath(context,data.getData());
+
+                            urlImage = getPath(context,data.getData());
                             View viewImages = inflaterItem.inflate(R.layout.item_layout_edit_images, null, true);
                             ImageView imageItem = (ImageView) viewImages.findViewById(R.id.imageItem);
                             TextView txtValue = (TextView) viewImages.findViewById(R.id.service_value);
                             final TextView txtDescription = (TextView) viewImages.findViewById(R.id.imageDescription);
                             txtDescription.setText(editText.getText().toString());
                             txtValue.setOnClickListener(new View.OnClickListener() {
-
                                 @Override
                                 public void onClick(View v) {
                                     RelativeLayout r = (RelativeLayout)v.getParent();

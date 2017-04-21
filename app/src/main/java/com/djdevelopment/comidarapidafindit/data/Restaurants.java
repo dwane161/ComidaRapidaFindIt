@@ -16,11 +16,12 @@ public class Restaurants {
     private String telephones;
     private boolean validated;
     private double rating;
+    private ArrayList<String> urlImage;
 
     public Restaurants() {
     }
 
-    public Restaurants(String restName, ArrayList<String> menu, String latLong, String creditCards, String telephones, boolean validated, double rating) {
+    public Restaurants(String restName, ArrayList<String> menu, String latLong, String creditCards, String telephones, boolean validated, double rating, ArrayList<String> urlImage) {
         this.restName = restName;
         this.menu = menu;
         this.latLong = latLong;
@@ -28,6 +29,7 @@ public class Restaurants {
         this.telephones = telephones;
         this.validated = validated;
         this.rating = rating;
+        this.urlImage = urlImage;
     }
 
     public double getRating() {
@@ -85,5 +87,13 @@ public class Restaurants {
 
     public void setTelephones(String telephones) {
         this.telephones = telephones;
+    }
+
+    public ArrayList<String> getUrlImage() {
+        return urlImage;
+    }
+
+    public void setUrlImage(ArrayList<String> urlImage) {
+        this.urlImage = urlImage;
     }
 }
