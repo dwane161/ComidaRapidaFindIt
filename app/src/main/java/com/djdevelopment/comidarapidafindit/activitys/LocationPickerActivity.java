@@ -8,6 +8,7 @@ import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
 import android.location.LocationListener;
+import android.location.LocationManager;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -40,16 +41,15 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Locale;
 
+import static com.djdevelopment.comidarapidafindit.activitys.MainActivity.getBitmapFromVectorDrawable;
 
 
 public class LocationPickerActivity extends AppCompatActivity implements OnMapReadyCallback, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
 
-	private static final int MY_PERMISSIONS_REQUEST_READ_CONTACTS = 0;
 	private static final int TAG_CODE_PERMISSION_LOCATION = 0;
 	private GoogleMap googleMap = null;
 	private SupportMapFragment mMapFragment = null;
 	private Marker selectedMarker = null;
-	private LatLng userPosition = null;
 	private TextView txtAddress = null;
 	private String address = null;
 	private boolean isTheFirstTime = false;
@@ -116,6 +116,7 @@ public class LocationPickerActivity extends AppCompatActivity implements OnMapRe
         }
         return true;
      }
+
 	@Override
 	public void onResume() {
 		super.onResume();
@@ -126,7 +127,6 @@ public class LocationPickerActivity extends AppCompatActivity implements OnMapRe
 		mMapFragment.getMapAsync(this);
 		// Check if we were successful in obtaining the map.
 		if (googleMap != null) {
-			LatLng dominicanRepublicLatLng = new LatLng(18.86471, -71.36719);
 			if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) ==
 					PackageManager.PERMISSION_GRANTED &&
 					ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) ==
@@ -140,27 +140,20 @@ public class LocationPickerActivity extends AppCompatActivity implements OnMapRe
 						TAG_CODE_PERMISSION_LOCATION);
 			}
 			googleMap.getUiSettings().setCompassEnabled(true);
-			MarkerOptions marker = new MarkerOptions().position(dominicanRepublicLatLng);
-			selectedMarker = googleMap.addMarker(marker);
-			selectedMarker.setIcon(BitmapDescriptorFactory.fromResource(R.drawable.ic_google_map_marker));
-			changeMapLocation(dominicanRepublicLatLng, 7);
-			googleMap.setOnMyLocationChangeListener(new GoogleMap.OnMyLocationChangeListener() {
-				@Override
-				public void onMyLocationChange(Location location) {
 
-					LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
-
-
-					userPosition = latLng;
-
-
-				}
-			});
-			googleMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
+            googleMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
 
 				@Override
 				public void onMapClick(LatLng clickedLat) {
-
+					try{
+						selectedMarker.remove();
+					}
+					catch (Exception ex){
+						ex.printStackTrace();
+					}
+					selectedMarker = googleMap.addMarker(new MarkerOptions()
+											.position(clickedLat)
+											.icon(BitmapDescriptorFactory.fromBitmap(getBitmapFromVectorDrawable(LocationPickerActivity.this,R.drawable.ic_placeholder))));
 					if (selectedMarker != null) {
 						selectedMarker.setPosition(clickedLat);
 						changeMapLocation(clickedLat, 17);
@@ -170,6 +163,9 @@ public class LocationPickerActivity extends AppCompatActivity implements OnMapRe
 				}
 			});
 
+			Location location = getLastKnownLocation();
+			locationUser = new LatLng(location.getLatitude(),location.getLongitude());
+			googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(locationUser,15));
 		}
 
 		}
@@ -256,6 +252,30 @@ public class LocationPickerActivity extends AppCompatActivity implements OnMapRe
 	public void onConnectionSuspended(int i) {
 
 
+	}
+
+	private Location getLastKnownLocation() {
+		//Method for get the last know location of user
+		LocationManager mLocationManager = (LocationManager)getApplicationContext().getSystemService(LOCATION_SERVICE);
+		List<String> providers = mLocationManager.getProviders(true);
+		Location bestLocation = null;
+		for (String provider : providers) {
+			Location l = null;
+			if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) ==
+					PackageManager.PERMISSION_GRANTED &&
+					ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) ==
+							PackageManager.PERMISSION_GRANTED) {
+				l = mLocationManager.getLastKnownLocation(provider);
+			}
+			if (l == null) {
+				continue;
+			}
+			if (bestLocation == null || l.getAccuracy() < bestLocation.getAccuracy()) {
+				// Found best last known location: %s", l);
+				bestLocation = l;
+			}
+		}
+		return bestLocation;
 	}
 
 	@Override

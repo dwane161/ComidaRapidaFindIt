@@ -4,23 +4,40 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.graphics.Color;
+import android.graphics.drawable.Drawable;
+import android.media.MediaRecorder;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.support.v7.app.AppCompatActivity;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewGroup;
+import android.view.ViewParent;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.DatePicker;
 import android.widget.EditText;
+import android.widget.LinearLayout;
+import android.widget.ScrollView;
 import android.widget.Spinner;
 import android.widget.TextView;
+import android.widget.TimePicker;
 import android.widget.Toast;
 
 import com.djdevelopment.comidarapidafindit.R;
+import com.djdevelopment.comidarapidafindit.activitys.SuggestActivity;
 import com.djdevelopment.comidarapidafindit.data.MenuService;
+import com.yuncun.swipeableweekview.WeekViewAdapter;
+import com.yuncun.swipeableweekview.WeekViewSwipeable;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * Created by Dwane Jimenez on 2/23/2017.
@@ -166,7 +183,7 @@ public class UtilUI {
                 .setView(viewRoot)
                 .setPositiveButton(R.string.lblAdd, null);
 
-        final AlertDialog dialog = 			    builder.create();
+        final AlertDialog dialog = 	 builder.create();
         dialog.show();
         //Overriding the handler immediately after show is probably a better approach than OnShowListener as described below
         dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(new View.OnClickListener()
@@ -189,11 +206,37 @@ public class UtilUI {
             }
         });
 
+        return telephone;
 
+    }
 
+    public static String   getScheduleDialog(final Activity activity,final Runnable callbackPositiveAction ){
 
+        AlertDialog.Builder builder = new AlertDialog.Builder(activity);
+        // Get the layout inflater
+        LayoutInflater inflater = activity.getLayoutInflater();
+        final View viewRoot =  inflater.inflate(R.layout.custom_dialog_schedule, null);
+        View custom_title =  inflater.inflate(R.layout.custom_title, null);
 
+        ((TextView)custom_title.findViewById(R.id.txtTitleDialog)).setText(R.string.TelephoneSuggested);
 
+        builder.setCustomTitle(custom_title).setCancelable(false)
+                .setView(viewRoot)
+                .setNegativeButton(R.string.cancel, null)
+                .setView(viewRoot)
+                .setPositiveButton(R.string.lblAdd, null);
+
+        final AlertDialog dialog = 	 builder.create();
+        dialog.show();
+        //Overriding the handler immediately after show is probably a better approach than OnShowListener as described below
+        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(new View.OnClickListener()
+        {
+            @Override
+            public void onClick(View v)
+            {
+                callbackPositiveAction.run();
+            }
+        });
 
         return telephone;
 
@@ -351,6 +394,4 @@ public class UtilUI {
         }
         return connection;
     }
-
-
 }

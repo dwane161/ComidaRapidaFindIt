@@ -4,11 +4,11 @@
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
 
-    <string name="title_main_drawer_map" >Mapa de sitios</string>
-    <string name="title_main_drawer_add" >Sugerir sitio</string>
-    <string name="title_main_drawer_ranking" >Sitios mejores valorados</string>
-    <string name="share" >¡Compartir App!</string>
-    <string name="send" >¡Enviar App a un amigo!</string>
+    <string name="title_main_drawer_map">Mapa de sitios</string>
+    <string name="title_main_drawer_add">Sugerir sitio</string>
+    <string name="title_main_drawer_ranking">Sitios mejores valorados</string>
+    <string name="share">¡Compartir App!</string>
+    <string name="send">¡Enviar App a un amigo!</string>
 
     <string name="action_settings">Settings</string>
     <string name="title_activity_maps">Map</string>
@@ -33,7 +33,7 @@
     <string name="cancel">Cancelar</string>
 
     <!-- Strings related to Settings -->
-<string name="thanksForSubmitInfo">Gracias por ser parte de la comunidad de colaboradores, ¡tu ayuda es bien recibida!.
+    <string name="thanksForSubmitInfo">Gracias por ser parte de la comunidad de colaboradores, ¡tu ayuda es bien recibida!.
 \n\nTodos los datos  suministrados son enviados de manera anónima y serán evaluados por nuestro equipo, para su posible publicación.
 </string>
     <!--     Errors Messages  -->
@@ -151,4 +151,8 @@
 
     <string name="image_description">Descripción de la imagen sugerida</string>
     <string name="description_hint">Escriba una descripción..</string>
+    <string name="title_activity_show_image">show_image</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
 </resources>

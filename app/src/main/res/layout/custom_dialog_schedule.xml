@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:descendantFocusability="blocksDescendants">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:id="@+id/linearLayoutSchedule"
+        android:layout_height="wrap_content">
+        <Button
+            android:layout_width="45dp"
+            android:layout_height="35dp"
+            android:id="@+id/btnD"
+            android:text="D"
+            android:background = "@drawable/roundedbutton"/>
+        <Button
+            android:layout_width="45dp"
+            android:layout_height="35dp"
+            android:text="L"
+            android:background = "@drawable/roundedbutton"/>
+        <Button
+            android:layout_width="45dp"
+            android:layout_height="35dp"
+            android:text="M"
+            android:background = "@drawable/roundedbutton"/>
+        <Button
+            android:layout_width="45dp"
+            android:layout_height="35dp"
+            android:text="M"
+            android:background = "@drawable/roundedbutton"/>
+        <Button
+            android:layout_width="45dp"
+            android:layout_height="35dp"
+            android:text="J"
+            android:background = "@drawable/roundedbutton"/>
+        <Button
+            android:layout_width="45dp"
+            android:layout_height="35dp"
+            android:text="V"
+            android:background = "@drawable/roundedbutton"/>
+        <Button
+            android:layout_width="45dp"
+            android:layout_height="35dp"
+            android:text="S"
+            android:background = "@drawable/roundedbutton"/>
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:text="Desde" />
+
+            <TimePicker
+                android:id="@+id/timePicker1"
+                android:layout_width="316dp"
+                android:layout_height="wrap_content"
+                android:timePickerMode="spinner" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:text="Hasta" />
+
+            <TimePicker
+                android:id="@+id/timePicker2"
+                android:layout_width="316dp"
+                android:layout_height="wrap_content"
+                android:timePickerMode="spinner" />
+        </LinearLayout>
+
+    </LinearLayout>
+
+</LinearLayout>

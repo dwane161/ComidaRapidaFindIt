@@ -1,6 +1,7 @@
 package com.djdevelopment.comidarapidafindit.data;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.StringTokenizer;
 
 /**
@@ -16,12 +17,12 @@ public class Restaurants {
     private String telephones;
     private boolean validated;
     private double rating;
-    private ArrayList<String> urlImage;
+    private HashMap<String,String> urlImage;
 
     public Restaurants() {
     }
 
-    public Restaurants(String restName, ArrayList<String> menu, String latLong, String creditCards, String telephones, boolean validated, double rating, ArrayList<String> urlImage) {
+    public Restaurants(String restName, ArrayList<String> menu, String latLong, String creditCards, String telephones, boolean validated, double rating, HashMap<String,String> urlImage) {
         this.restName = restName;
         this.menu = menu;
         this.latLong = latLong;
@@ -89,11 +90,11 @@ public class Restaurants {
         this.telephones = telephones;
     }
 
-    public ArrayList<String> getUrlImage() {
+    public HashMap<String,String> getUrlImage() {
         return urlImage;
     }
 
-    public void setUrlImage(ArrayList<String> urlImage) {
+    public void setUrlImage(HashMap<String,String> urlImage) {
         this.urlImage = urlImage;
     }
 }

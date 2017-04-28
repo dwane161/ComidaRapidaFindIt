@@ -1,7 +1,6 @@
 package com.djdevelopment.comidarapidafindit.activitys;
 
 import android.Manifest;
-import android.animation.Animator;
 import android.animation.ArgbEvaluator;
 import android.animation.ValueAnimator;
 import android.content.Context;
@@ -15,13 +14,18 @@ import android.graphics.drawable.Drawable;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.StrictMode;
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomSheetBehavior;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.graphics.drawable.DrawableCompat;
 import android.support.v4.view.GravityCompat;
@@ -30,20 +34,21 @@ import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.AppCompatDrawableManager;
 import android.support.v7.widget.Toolbar;
-import android.util.Base64;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.LinearLayout;
+import android.widget.ImageView;
 import android.widget.RatingBar;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.afollestad.materialdialogs.DialogAction;
 import com.afollestad.materialdialogs.MaterialDialog;
+import com.afollestad.materialdialogs.Theme;
 import com.akexorcist.googledirection.DirectionCallback;
 import com.akexorcist.googledirection.GoogleDirection;
 import com.akexorcist.googledirection.constant.TransportMode;
@@ -53,7 +58,16 @@ import com.akexorcist.googledirection.model.Route;
 import com.akexorcist.googledirection.util.DirectionConverter;
 import com.djdevelopment.comidarapidafindit.R;
 import com.djdevelopment.comidarapidafindit.data.Restaurants;
-import com.etiennelawlor.imagegallery.library.activities.ImageGalleryActivity;
+import com.google.android.gms.auth.api.Auth;
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
+import com.google.android.gms.auth.api.signin.GoogleSignInResult;
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.Scopes;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.Scope;
+import com.google.android.gms.common.api.Status;
+import com.google.android.gms.drive.Drive;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -64,7 +78,13 @@ import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
-import com.google.android.gms.plus.model.people.Person;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.AuthCredential;
+import com.google.firebase.auth.AuthResult;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.auth.GoogleAuthProvider;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -75,10 +95,15 @@ import com.stfalcon.multiimageview.MultiImageView;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.ThreadFactory;
 
+import br.com.jeancsanchez.photoviewslider.PhotosViewSlider;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
@@ -86,15 +111,20 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     //Permisions
     private static final int TAG_CODE_PERMISSION_LOCATION = 0;
+    private static final int RC_SIGN_IN = 5;
 
     //Map configurantion
     private GoogleMap mMap;
+
+
+    private GoogleApiClient mGoogleApiClient;
 
     //Firebase configuration
     FirebaseDatabase database = FirebaseDatabase.getInstance();
     DatabaseReference myRef = database.getReference("restaurants-suggest");
     Restaurants restaurant;
-
+    private FirebaseAuth mAuth;
+    private FirebaseAuth.AuthStateListener mAuthListener;
 
     //BottonSheet view
 
@@ -122,9 +152,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     @BindView(R.id.ratingBarBottom) RatingBar ratingBarBottom;
     @BindView(R.id.floatingActionButton) FloatingActionButton floatingActionButton;
     @BindView(R.id.btnMostrarMenu) Button btnMostarMenu;
+    @BindView(R.id.btnIniciarSesion) Button btnIniciarSesion;
     @BindView(R.id.btnRating) Button btnRating;
     @BindView(R.id.bottomSheet) BottomSheetBehavior bottomSheetBehavior;
     @BindView(R.id.imageViewDescription) MultiImageView mThumbnailPreview;
+    PhotosViewSlider photoViewSlider;
 
     RatingBar ratingBarAddComments;
     EditText txtComments;
@@ -140,10 +172,15 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     ArrayList<Restaurants> restaurants = new ArrayList<>();
     ArrayList<String> keys = new ArrayList<>();
+    ArrayList<String> photosUrl = new ArrayList<>();
+    ArrayList<String> commentsUsersImages = new ArrayList<>();
+
+    NavigationView navigationView;
+
     int index = 0;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(Bundle savedInstanceState)  {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
@@ -157,13 +194,16 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         drawer.setDrawerListener(toggle);
         toggle.syncState();
 
-        NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
+        navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
 
         final SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
 
+        StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
+
+        StrictMode.setThreadPolicy(policy);
 
         bottomSheet = findViewById(R.id.bottomSheet);
         bottomSheetBehavior = BottomSheetBehavior.from(findViewById(R.id.bottomSheet));
@@ -174,147 +214,78 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         lblTelephone = (TextView) findViewById(R.id.lblTelephone);
         floatingActionButton = (FloatingActionButton) findViewById(R.id.floatingActionButton);
         btnMostarMenu =  (Button) findViewById(R.id.btnMostrarMenu);
+        btnIniciarSesion = (Button) findViewById(R.id.btnIniciarSesion);
         mThumbnailPreview = (MultiImageView) findViewById(R.id.imageViewDescription);
         btnRating = (Button) findViewById(R.id.btnRating);
         relativeLayoutBottomSheet = (RelativeLayout) findViewById(R.id.RelativeLayoutBottomSheet);
+        photoViewSlider = (PhotosViewSlider) findViewById(R.id.photosViewSlider);
 
         floatingActionButton.setVisibility(FloatingActionButton.INVISIBLE);
 
         //Put BottomSheet Hidden when the app begin
         bottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
 
-        bottomSheetBehavior.setBottomSheetCallback(new BottomSheetBehavior.BottomSheetCallback() {
-            @Override
-            public void onStateChanged(@NonNull final View bottomSheet, int newState) {
-                switch (newState){
-                    case BottomSheetBehavior.STATE_DRAGGING:
-                        bottomSheet.setBackgroundColor(getResources().getColor(R.color.colorAzul));
-                        relativeLayoutBottomSheet.setBackgroundColor(getResources().getColor(R.color.colorBlanco));
-                        break;
-                    case BottomSheetBehavior.STATE_EXPANDED:
-                        bottomSheet.setBackgroundColor(getResources().getColor(R.color.colorAzul));
-                        relativeLayoutBottomSheet.setBackgroundColor(getResources().getColor(R.color.colorBlanco));
-                        break;
-                    case BottomSheetBehavior.STATE_COLLAPSED:
-                        animateColor(Color.rgb(50,146,248), Color.rgb(255,255,255), 200);
-                        relativeLayoutBottomSheet.setBackgroundColor(Color.rgb(255,255,255));
-                        mThumbnailPreview.setVisibility(View.VISIBLE);
-                        floatingActionButton.setVisibility(FloatingActionButton.VISIBLE);
-                        break;
-                    case BottomSheetBehavior.STATE_HIDDEN:
-                        mThumbnailPreview.setVisibility(View.INVISIBLE);
-                        floatingActionButton.setVisibility(FloatingActionButton.INVISIBLE);
-                        break;
-                }
+        bottomSheetBehavior();
 
+        retrieveDataFromFirebase();
+
+        GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+//                .requestId()
+                .requestIdToken("224098914874-v53bv24ili6ik7i8u6bof8bkqlqal6ar.apps.googleusercontent.com")
+                .requestEmail()
+                .build();
+
+        mGoogleApiClient = new GoogleApiClient.Builder(this)
+                .enableAutoManage(this,
+                        new GoogleApiClient.OnConnectionFailedListener() {
+                            @Override
+                            public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
+                                System.out.println(connectionResult.getErrorMessage());
+                            }
+                        })
+                .addApi(Auth.GOOGLE_SIGN_IN_API,gso)
+                .build();
+
+        mAuth = FirebaseAuth.getInstance();
+
+        View navHeaderView = navigationView.inflateHeaderView(R.layout.nav_header_main);
+
+        final TextView idUsuario = (TextView) navHeaderView.findViewById(R.id.idUsuario);
+        final TextView emailUsuario = (TextView) navHeaderView.findViewById(R.id.Email);
+        final ImageView imageViewUsuario = (ImageView) navHeaderView.findViewById(R.id.imageViewNavHeader);
+        try {
+            FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+            if (user != null) {
+                String name = user.getDisplayName();
+                idUsuario.setText(name);
+                String email = user.getEmail();
+                emailUsuario.setText(email);
+                Uri photoUrl = user.getPhotoUrl();
+                imageViewUsuario.setImageBitmap(getBitmapFromURL(photoUrl.toString()));
+            } else {
+                // No user is signed in
             }
-
-            @Override
-            public void onSlide(@NonNull View bottomSheet, float slideOffset) {
-
-            }
-        });
-
-        //Firebase data retrieve
-        myRef.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(final DataSnapshot dataSnapshot) {
-
-                restaurants.clear();
-                index = 0;
-                for(final DataSnapshot dataSnapshotchild : dataSnapshot.getChildren()){
-                    try {
-
-                        if(dataSnapshotchild.child("validated").getValue().toString().equals("true")) {
-
-                            restaurant = dataSnapshotchild.getValue(Restaurants.class);
-                            keys.add(dataSnapshotchild.getKey());
-                            restaurants.add(restaurant);
-                            String latLong = dataSnapshotchild.child("latLong").getValue().toString();
-                            String[] words = latLong.split(",");
-                            String latitud = words[0].substring(10);
-                            String longitud = words[1].replace(")", "");
-                            LatLng latLng = new LatLng(Double.parseDouble(latitud), Double.parseDouble(longitud));
-
-                            mMap.addMarker(new MarkerOptions()
-                                    .position(latLng)
-                                    .title(dataSnapshotchild.child("restName").getValue().toString())
-                                    .snippet(String.valueOf(index))
-                                    .icon(BitmapDescriptorFactory.fromBitmap(getBitmapFromVectorDrawable(MainActivity.this,R.drawable.ic_placeholder))));
-
-                            index++;
-                            mMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
-                                @Override
-                                public boolean onMarkerClick(Marker marker) {
-                                    //TODO AGREGAR LOS DEMAS CAMPOS DEL RESTAURANTE
-                                    markerSelected = Integer.parseInt(marker.getSnippet());
-
-                                    bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
-                                    txtBottomSheet.setText(restaurants.get(markerSelected).getRestName());
-                                    txtRating.setText(String.valueOf(restaurants.get(markerSelected).getRating()));
-                                    txtCreditCards.setText(restaurants.get(markerSelected).getCreditCards());
-                                    ratingBarBottom.setRating((float)restaurants.get(markerSelected).getRating());
-                                    lblTelephone.setText(restaurants.get(markerSelected).getTelephones());
-
-                                    try {
-                                        mThumbnailPreview.clear();
-                                        for(int i = 0; i< restaurants.get(markerSelected).getUrlImage().size(); i++){
-                                            byte[] imageAsBytes = Base64.decode(restaurants.get(markerSelected).getUrlImage().get(i).getBytes(), Base64.DEFAULT);
-                                            mThumbnailPreview.addImage(BitmapFactory.decodeByteArray(imageAsBytes, 0, imageAsBytes.length));
-                                        }
-                                    }
-                                    catch (Exception ex){
-                                        mThumbnailPreview.setImageBitmap(null);
-                                        ex.printStackTrace();
-                                    }
-
-                                    LatLng positionMarker = marker.getPosition();
-
-                                    GoogleDirection.withServerKey("AIzaSyAseOR6uttx9_AMO89pcG2WzaT-Bl6zMWA")
-                                            .from(locationUser)
-                                            .to(positionMarker)
-                                            .transportMode(TransportMode.DRIVING)
-                                            .execute(new DirectionCallback() {
-                                                @Override
-                                                public void onDirectionSuccess(Direction direction, String rawBody) {
-                                                    if(direction.isOK()){
-                                                        Route route = direction.getRouteList().get(0);
-                                                        Leg leg = route.getLegList().get(0);
-
-                                                        ArrayList<LatLng> directionPositionList = leg.getDirectionPoint();
-                                                        polylineOptions = DirectionConverter.createPolyline(MainActivity.this, directionPositionList, 5, Color.RED);
-                                                    }
-                                                }
-
-                                                @Override
-                                                public void onDirectionFailure(Throwable t) {
-
-                                                }
-                                            });
-
-
-                                    return true;
-                                }
-                            });
-                        }
-                    }
-                    catch(Exception ex){
-                        ex.getMessage();
-                    }
-                }
-
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-
-            }
-        });
+        }
+        catch (Exception ex){
+            ex.printStackTrace();
+        }
 
         floatingActionButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 polyline =  mMap.addPolyline(polylineOptions);
+            }
+        });
+
+        Button btnCerrarSesion = (Button) navHeaderView.findViewById(R.id.btnIniciarSesion);
+
+        btnCerrarSesion.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                FirebaseAuth.getInstance().signOut();
+                idUsuario.setText("Nombre Usuario");
+                emailUsuario.setText("Email");
+                imageViewUsuario.setImageBitmap(BitmapFactory.decodeResource(getResources(),R.drawable.burger));
             }
         });
 
@@ -335,12 +306,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         .title("Menu")
                         .items(namePriceList)
                         .show();
-            }
-        });
-        mThumbnailPreview.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-
             }
         });
 
@@ -370,7 +335,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                             }
                         })
                         .show();
-
             }
         });
     }
@@ -437,6 +401,25 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == RC_SIGN_IN) {
+            GoogleSignInResult result = Auth.GoogleSignInApi.getSignInResultFromIntent(data);
+
+            if (result.isSuccess()) {
+                // Google Sign In was successful, authenticate with Firebase
+                GoogleSignInAccount account = result.getSignInAccount();
+                firebaseAuthWithGoogle(account);
+            } else {
+                // Google Sign In failed, update UI appropriately
+                // ...
+            }
+        }
+
+
+    }
+
+    @Override
     public void onBackPressed() {
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         if (drawer.isDrawerOpen(GravityCompat.START)) {
@@ -481,8 +464,17 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             Intent intent = new Intent(this, SuggestActivity.class);
             startActivity(intent);
 
-        } else if (id == R.id.nav_slideshow) {
 
+
+        } else if (id == R.id.nav_slideshow) {
+            try {
+                Intent signInIntent = Auth.GoogleSignInApi.getSignInIntent(mGoogleApiClient);
+                startActivityForResult(signInIntent, RC_SIGN_IN);
+
+            }
+            catch (Exception ex){
+                ex.printStackTrace();
+            }
 
         } else if (id == R.id.nav_manage) {
 
@@ -516,6 +508,160 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     @Override
     public void onProviderDisabled(String s) {
+    }
+
+    private void retrieveDataFromFirebase(){
+        //Firebase data retrieve
+        myRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(final DataSnapshot dataSnapshot) {
+
+                restaurants.clear();
+                index = 0;
+                for(final DataSnapshot dataSnapshotchild : dataSnapshot.getChildren()){
+                    try {
+
+                        if(dataSnapshotchild.child("validated").getValue().toString().equals("true")) {
+
+                            restaurant = dataSnapshotchild.getValue(Restaurants.class);
+                            keys.add(dataSnapshotchild.getKey());
+                            restaurants.add(restaurant);
+                            String latLong = dataSnapshotchild.child("latLong").getValue().toString();
+                            String[] words = latLong.split(",");
+                            String latitud = words[0].substring(10);
+                            String longitud = words[1].replace(")", "");
+                            LatLng latLng = new LatLng(Double.parseDouble(latitud), Double.parseDouble(longitud));
+
+                            mMap.addMarker(new MarkerOptions()
+                                    .position(latLng)
+                                    .title(dataSnapshotchild.child("restName").getValue().toString())
+                                    .snippet(String.valueOf(index))
+                                    .icon(BitmapDescriptorFactory.fromBitmap(getBitmapFromVectorDrawable(MainActivity.this,R.drawable.ic_placeholder))));
+
+                            index++;
+                            mMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
+                                @Override
+                                public boolean onMarkerClick(Marker marker) {
+                                    //TODO AGREGAR LOS DEMAS CAMPOS DEL RESTAURANTE
+                                    markerSelected = Integer.parseInt(marker.getSnippet());
+
+                                    bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
+                                    txtBottomSheet.setText(restaurants.get(markerSelected).getRestName());
+                                    txtRating.setText(String.valueOf(restaurants.get(markerSelected).getRating()));
+                                    txtCreditCards.setText(restaurants.get(markerSelected).getCreditCards());
+                                    ratingBarBottom.setRating((float)restaurants.get(markerSelected).getRating());
+                                    lblTelephone.setText(restaurants.get(markerSelected).getTelephones());
+
+                                    photoViewSlider.setVisibility(View.INVISIBLE);
+
+                                    try {
+                                        mThumbnailPreview.clear();
+                                        photosUrl.clear();
+                                        new Thread(new Runnable() {
+                                            @Override
+                                            public void run() {
+                                                runOnUiThread(new Runnable() {
+                                                    @Override
+                                                    public void run() {
+                                                        for (String key : restaurants.get(markerSelected).getUrlImage().keySet()) {
+                                                            try {
+                                                                JSONObject jObj = new JSONObject(restaurants.get(markerSelected).getUrlImage().get(key));
+                                                                commentsUsersImages.add(jObj.getString("name"));
+                                                                photosUrl.add(jObj.getString("url"));
+                                                            } catch (JSONException e) {
+                                                                Log.e("MYAPP", "unexpected JSON exception", e);
+                                                            }
+                                                        }
+                                                        photoViewSlider.setVisibility(View.VISIBLE);
+                                                        photoViewSlider.initializePhotosUrls(photosUrl);
+                                                    }
+                                                });
+                                            }
+                                        }).start();
+                                    }
+                                    catch (Exception ex){
+                                        mThumbnailPreview.setImageBitmap(null);
+                                        ex.printStackTrace();
+                                    }
+
+                                    LatLng positionMarker = marker.getPosition();
+
+                                    GoogleDirection.withServerKey("AIzaSyAseOR6uttx9_AMO89pcG2WzaT-Bl6zMWA")
+                                            .from(locationUser)
+                                            .to(positionMarker)
+                                            .transportMode(TransportMode.DRIVING)
+                                            .execute(new DirectionCallback() {
+                                                @Override
+                                                public void onDirectionSuccess(Direction direction, String rawBody) {
+                                                    if(direction.isOK()){
+                                                        Route route = direction.getRouteList().get(0);
+                                                        Leg leg = route.getLegList().get(0);
+
+                                                        ArrayList<LatLng> directionPositionList = leg.getDirectionPoint();
+                                                        polylineOptions = DirectionConverter.createPolyline(MainActivity.this, directionPositionList, 5, Color.RED);
+                                                    }
+                                                }
+
+                                                @Override
+                                                public void onDirectionFailure(Throwable t) {
+
+                                                }
+                                            });
+
+
+                                    return true;
+                                }
+                            });
+                        }
+                    }
+                    catch(Exception ex){
+                        ex.getMessage();
+                    }
+                }
+
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+
+    }
+
+    private void bottomSheetBehavior(){
+        bottomSheetBehavior.setBottomSheetCallback(new BottomSheetBehavior.BottomSheetCallback() {
+            @Override
+            public void onStateChanged(@NonNull final View bottomSheet, int newState) {
+                switch (newState){
+                    case BottomSheetBehavior.STATE_DRAGGING:
+                        bottomSheet.setBackgroundColor(getResources().getColor(R.color.colorAzul));
+                        relativeLayoutBottomSheet.setBackgroundColor(getResources().getColor(R.color.colorBlanco));
+                        break;
+                    case BottomSheetBehavior.STATE_EXPANDED:
+                        bottomSheet.setBackgroundColor(getResources().getColor(R.color.colorAzul));
+                        relativeLayoutBottomSheet.setBackgroundColor(getResources().getColor(R.color.colorBlanco));
+                        break;
+                    case BottomSheetBehavior.STATE_COLLAPSED:
+                        animateColor(Color.rgb(50,146,248), Color.rgb(255,255,255), 200);
+                        relativeLayoutBottomSheet.setBackgroundColor(Color.rgb(255,255,255));
+                        mThumbnailPreview.setVisibility(View.VISIBLE);
+                        floatingActionButton.setVisibility(FloatingActionButton.VISIBLE);
+                        break;
+                    case BottomSheetBehavior.STATE_HIDDEN:
+                        mThumbnailPreview.setVisibility(View.INVISIBLE);
+                        photoViewSlider.setVisibility(View.INVISIBLE);
+                        floatingActionButton.setVisibility(FloatingActionButton.INVISIBLE);
+                        break;
+                }
+
+            }
+
+            @Override
+            public void onSlide(@NonNull View bottomSheet, float slideOffset) {
+
+            }
+        });
     }
 
     private Location getLastKnownLocation() {
@@ -573,7 +719,39 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         return bitmap;
     }
 
+    private void firebaseAuthWithGoogle(GoogleSignInAccount acct) {
 
+        AuthCredential credential = GoogleAuthProvider.getCredential(acct.getIdToken(), null);
+        mAuth.signInWithCredential(credential)
+                .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
+                    @Override
+                    public void onComplete(@NonNull Task<AuthResult> task) {
+                        Log.d("Sig-in", "signInWithCredential:onComplete:" + task.isSuccessful());
+
+                        if (!task.isSuccessful()) {
+                            Log.w("Sig-in", "signInWithCredential", task.getException());
+                            Toast.makeText(MainActivity.this, "Authentication failed.",
+                                    Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                });
+    }
+
+    public static Bitmap getBitmapFromURL(String src) {
+        try {
+            Log.e("src",src);
+            URL url = new URL(src);
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setDoInput(true);
+            connection.connect();
+            InputStream input = connection.getInputStream();
+            Bitmap myBitmap = BitmapFactory.decodeStream(input);
+            Log.e("Bitmap","returned");
+            return myBitmap;
+        } catch (IOException e) {
+            e.printStackTrace();
+            Log.e("Exception",e.getMessage());
+            return null;
+        }
+    }
 }
-
-

@@ -3,9 +3,7 @@
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/ScrollViewSujectMotel"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-
-    >
+    android:layout_height="match_parent">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -426,30 +424,69 @@
                 android:orientation="vertical">
 
                 <TextView
-                    android:id="@+id/lblRating"
+                    android:id="@+id/lblSchedule"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Rating"
+                    android:text="Horario"
                     android:textSize="25sp"
                     android:textColor="#303F9F"
                     android:padding="10dp"
                     />
-
-                <RatingBar
-                    android:id="@+id/ratingBar"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:numStars="5"
-                    android:stepSize="0.5"
-                    android:rating="3.0" />
                 <View
                     android:layout_width="fill_parent"
                     android:layout_height="0.5dp"
                     android:background="#3F51B5"/>
+                <LinearLayout
+                    android:id="@+id/cardViewSchedule"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="10dp">
+
+                    <!--
+
+                        <include layout="@layout/item_layout_edit_images"/>
+                        <include layout="@layout/item_layout_edit_images"/>
+                     -->
+
+                </LinearLayout>
                 <View
                     android:layout_width="fill_parent"
                     android:layout_height="0.5dp"
                     android:background="#cecece"/>
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    >
+                    <Button
+                        android:id="@+id/btnAddSchedule"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:background="@drawable/card_button"
+                        android:text="Agregar"
+
+                        android:paddingLeft="15dp"
+                        android:paddingRight="15dp"
+                        android:textSize="12sp"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="2dp"
+                        android:drawableLeft="@drawable/ic_action_forward"
+                        android:textColor="@drawable/button_card_text"/>
+                    <Button
+                        android:id="@+id/btnHelpSchedule"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:background="@drawable/card_button"
+                        android:layout_alignParentRight="true"
+                        android:textSize="12sp"
+                        android:text="AYUDA"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="2dp"
+                        android:textColor="@drawable/button_card_text"
+                        android:drawableRight="@drawable/ic_action_help"/>
+
+                </RelativeLayout>
 
             </LinearLayout>
 

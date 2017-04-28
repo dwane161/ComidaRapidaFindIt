@@ -15,13 +15,20 @@ import android.os.Build;
 import android.os.Environment;
 import android.provider.DocumentsContract;
 import android.provider.MediaStore;
+import android.support.annotation.NonNull;
+import android.support.design.widget.NavigationView;
+import android.support.v4.view.GravityCompat;
+import android.support.v4.widget.DrawerLayout;
+import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
-import android.util.Base64;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -37,16 +44,22 @@ import com.djdevelopment.comidarapidafindit.data.MenuService;
 import com.djdevelopment.comidarapidafindit.data.Restaurants;
 import com.djdevelopment.comidarapidafindit.tools.UtilUI;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.OnProgressListener;
+import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
 
-import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 
-public class SuggestActivity extends AppCompatActivity {
+public class SuggestActivity extends AppCompatActivity{
 
     final Context context = this;
     private ArrayList<MenuService> menuServices;
@@ -55,7 +68,6 @@ public class SuggestActivity extends AppCompatActivity {
     LinearLayout cardViewServices = null;
     private ArrayList<String> telephones = null;
     private EditText txtName  = null;
-    private RatingBar ratingBar = null;
     private ArrayList<String> creditCards = null;
     private ArrayList<Image> imagesList = null;
     private LatLng selectMotelLatLng = null;
@@ -63,19 +75,23 @@ public class SuggestActivity extends AppCompatActivity {
     LinearLayout cardViewServicesTelephons = null;
     LinearLayout cardViewCreditCards = null;
     LinearLayout cardViewLocation = null;
-    private DatabaseReference mDatabase;
+    LinearLayout cardViewSchedule = null;
+
+    String key;
 
     String urlImage;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_suggest);
 
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
-        telephones = new ArrayList<String>();
-        creditCards = new ArrayList<String>();
-        imagesList = new ArrayList<Image>();
+        telephones = new ArrayList<>();
+        creditCards = new ArrayList<>();
+        imagesList = new ArrayList<>();
 
 
         cardViewServices =  (LinearLayout)findViewById(R.id.cardViewServicesPrices);
@@ -83,6 +99,7 @@ public class SuggestActivity extends AppCompatActivity {
         cardViewImages =  (LinearLayout) findViewById(R.id.cardViewImages);
         cardViewCreditCards =  (LinearLayout)findViewById(R.id.cardViewCreditCards);
         cardViewLocation =  (LinearLayout)findViewById(R.id.cardViewLocation);
+        cardViewSchedule =  (LinearLayout) findViewById(R.id.cardViewSchedule);
 
         menuServices = new ArrayList<>();
         custom_font2 = Typeface.createFromAsset(SuggestActivity.this.getAssets(), "Roboto-Thin.ttf");
@@ -91,12 +108,11 @@ public class SuggestActivity extends AppCompatActivity {
 
         cardViewServices =  (LinearLayout)findViewById(R.id.cardViewServicesPrices);
 
-        initComponents();
-
-
         txtName =  (EditText) findViewById(R.id.txtName);
-        ratingBar = (RatingBar) findViewById(R.id.ratingBar);
+
         final Button btnSend = (Button)findViewById(R.id.btnSend);
+
+        initComponents();
 
         btnSend.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -106,6 +122,9 @@ public class SuggestActivity extends AppCompatActivity {
                 String creditCars;
                 double countStars;
                 String telephonesArray;
+
+                FirebaseDatabase database = FirebaseDatabase.getInstance();
+                final DatabaseReference myRef = database.getReference();
 
                 restName = txtName.getText().toString();
 
@@ -126,7 +145,6 @@ public class SuggestActivity extends AppCompatActivity {
                         && UtilUI.validateInternetConnetion(SuggestActivity.this,null)){
 
                     ArrayList<String> resMenuArray = new ArrayList<>();
-                    ArrayList<String> imageList = new ArrayList<>();
 
 
                     for(MenuService menu: menuServices){
@@ -136,29 +154,38 @@ public class SuggestActivity extends AppCompatActivity {
                     telephonesArray = TextUtils.join(", ", telephones.toArray());
 
                     //Rating de restaurante
-                    countStars = ratingBar.getRating();
+                    countStars = 0.00;
 
-                    BitmapFactory.Options options = new BitmapFactory.Options();
-                    Bitmap bitmap;
-                    ByteArrayOutputStream baos;
 
-                    for(Image images:imagesList){
-                        options.inSampleSize = 8; // shrink it down otherwise we will use stupid amounts of memory
-                        bitmap = BitmapFactory.decodeFile(images.getUrl(), options);
-                        baos = new ByteArrayOutputStream();
-                        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
-                        byte[] bytes = baos.toByteArray();
-                        String base64Image = Base64.encodeToString(bytes, Base64.DEFAULT);
-                        imageList.add(base64Image);
+                    Restaurants restaurants = new Restaurants(restName, resMenuArray, LatLngCoord, creditCars, telephonesArray, false, countStars, null);
+
+                    key = myRef.push().getKey();
+                    myRef.child("restaurants-suggest").child(key).setValue(restaurants);
+
+                    for (final Image images : imagesList) {
+                        StorageReference storageRef = FirebaseStorage.getInstance().getReferenceFromUrl("gs://comidarapida-cae88.appspot.com/");
+
+                        Uri file = Uri.fromFile(new File(images.getUrl()));
+
+                        StorageReference spaceRef = storageRef.child("images/"+key +"/"+file.getLastPathSegment());
+                        UploadTask uploadTask = spaceRef.putFile(file);
+
+                        uploadTask.addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                            @Override
+                            public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                                myRef.child("restaurants-suggest").child(key).child("urlImage").push().setValue("{\"name\": \"" + images.getDescription() +"\" , \"url\": \"" + taskSnapshot.getDownloadUrl().toString() + "\"}");
+                            }
+                        }).addOnFailureListener(new OnFailureListener() {
+                            @Override
+                            public void onFailure(@NonNull Exception e) {
+                                e.printStackTrace();
+                            }
+                        }).addOnProgressListener(new OnProgressListener<UploadTask.TaskSnapshot>() {
+                            @Override
+                            public void onProgress(UploadTask.TaskSnapshot taskSnapshot) {
+                            }
+                        });
                     }
-
-
-                    Restaurants restaurants = new Restaurants(restName, resMenuArray, LatLngCoord, creditCars, telephonesArray, false, countStars, imageList);
-
-                    FirebaseDatabase database = FirebaseDatabase.getInstance();
-                    DatabaseReference myRef = database.getReference();
-
-                    myRef.child("restaurants-suggest").push().setValue(restaurants);
 
                     UtilUI.showAlertDialog(SuggestActivity.this, SuggestActivity.this.getString(R.string.thanksContibution),SuggestActivity.this.getString(R.string.thanksForSubmitInfo), R.string.iGotIt, new Runnable() {
 
@@ -180,11 +207,12 @@ public class SuggestActivity extends AppCompatActivity {
         suggestCreditCards();
         suggestTelephones();
         suggetImage();
+        suggestSchedule();
     }
 
     private void addNewFastFood(){
 
-        ((Button)findViewById(R.id.btnAddNewFastFood)).setOnClickListener(new View.OnClickListener() {
+        (findViewById(R.id.btnAddNewFastFood)).setOnClickListener(new View.OnClickListener() {
 
             @Override
             public void onClick(View v) {
@@ -295,7 +323,7 @@ public class SuggestActivity extends AppCompatActivity {
     }
 
     private void suggestTelephones(){
-        ((Button)findViewById(R.id.btnSuggestedTelephons)).setOnClickListener(new View.OnClickListener() {
+        (findViewById(R.id.btnSuggestedTelephons)).setOnClickListener(new View.OnClickListener() {
 
             @Override
             public void onClick(View v) {
@@ -316,9 +344,6 @@ public class SuggestActivity extends AppCompatActivity {
                         txtPhone.setText(phone);
                         txtPhone.setTypeface(custom_font2);
 
-
-
-
                         txtValue.setOnClickListener(new View.OnClickListener() {
 
                             @Override
@@ -335,6 +360,46 @@ public class SuggestActivity extends AppCompatActivity {
 
 
                         UtilUI.telephone = null;
+
+                    }
+                });
+            }
+
+        });
+    }
+
+    private void suggestSchedule(){
+        (findViewById(R.id.btnAddSchedule)).setOnClickListener(new View.OnClickListener() {
+
+            @Override
+            public void onClick(View v) {
+
+                UtilUI.getScheduleDialog(SuggestActivity.this, new Runnable() {
+
+                    @Override
+                    public void run() {
+
+                        UtilUI.hideSoftKeyBoard(SuggestActivity.this);
+
+                        View viewPhones = inflaterItem.inflate(R.layout.item_layout_edit, null, true);
+                        TextView txtPhone = (TextView) viewPhones.findViewById(R.id.lblTimeOftheLastVote);
+                        TextView txtValue = (TextView) viewPhones.findViewById(R.id.service_value);
+
+                        txtPhone.setTypeface(custom_font2);
+
+                        txtValue.setOnClickListener(new View.OnClickListener() {
+
+                            @Override
+                            public void onClick(View v) {
+                                RelativeLayout r = (RelativeLayout)v.getParent();
+                                int index  = cardViewSchedule.indexOfChild(r);
+                                cardViewSchedule.removeViewAt(index);
+                            }
+                        });
+
+
+                        cardViewSchedule.addView(viewPhones);
+
 
                     }
                 });
@@ -393,9 +458,8 @@ public class SuggestActivity extends AppCompatActivity {
         }
 
         if(requestCode == 11  && resultCode == RESULT_OK){
+
             if(data!=null && data.getExtras().containsKey("userPosition")){
-
-
 
                 cardViewLocation.removeAllViews();
                 selectMotelLatLng = null;
@@ -419,6 +483,20 @@ public class SuggestActivity extends AppCompatActivity {
             }
         }
 
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case android.R.id.home:
+                // app icon in action bar clicked; go home
+                Intent intent = new Intent(this, MainActivity.class);
+                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                startActivity(intent);
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
     }
 
     protected void showInputDialogAndAddElement(final Intent data) {
