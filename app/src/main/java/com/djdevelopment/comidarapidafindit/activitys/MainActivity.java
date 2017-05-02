@@ -6,6 +6,7 @@ import android.animation.ValueAnimator;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
@@ -40,6 +41,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.RatingBar;
 import android.widget.RelativeLayout;
@@ -139,7 +141,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     @BindView(R.id.floatingActionButton) FloatingActionButton floatingActionButton;
     @BindView(R.id.btnMostrarMenu) Button btnMostarMenu;
     @BindView(R.id.btnMostrarRating) Button btnMostrarRating;
-    @BindView(R.id.btnIniciarSesion) Button btnIniciarSesion;
     @BindView(R.id.btnRating) Button btnRating;
     @BindView(R.id.bottomSheet) BottomSheetBehavior bottomSheetBehavior;
     @BindView(R.id.imageViewDescription) MultiImageView mThumbnailPreview;
@@ -169,6 +170,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     FirebaseUser user;
 
+    TextView idUsuario;
+    TextView emailUsuario;
+    ImageView imageViewUsuario;
+
     int index = 0;
 
     @Override
@@ -189,6 +194,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
 
+
         final SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
@@ -206,7 +212,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         lblTelephone = (TextView) findViewById(R.id.lblTelephone);
         floatingActionButton = (FloatingActionButton) findViewById(R.id.floatingActionButton);
         btnMostarMenu =  (Button) findViewById(R.id.btnMostrarMenu);
-        btnIniciarSesion = (Button) findViewById(R.id.btnIniciarSesion);
         mThumbnailPreview = (MultiImageView) findViewById(R.id.imageViewDescription);
         btnRating = (Button) findViewById(R.id.btnRating);
         relativeLayoutBottomSheet = (RelativeLayout) findViewById(R.id.RelativeLayoutBottomSheet);
@@ -223,39 +228,58 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         retrieveDataFromFirebase();
 
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                .requestIdToken("599878823243-aj6quill8ru73tchkpp4nciiq3rl1kd6.apps.googleusercontent.com")
+                .requestIdToken(getString(R.string.google_api_user_key))
                 .requestEmail()
                 .build();
 
         mGoogleApiClient = new GoogleApiClient.Builder(this)
-                .enableAutoManage(this,
-                        new GoogleApiClient.OnConnectionFailedListener() {
-                            @Override
-                            public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
-                                System.out.println(connectionResult.getErrorMessage());
-                            }
-                        })
+                .enableAutoManage(this, new GoogleApiClient.OnConnectionFailedListener() {
+                    @Override
+                    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
+
+                    }
+                })
                 .addApi(Auth.GOOGLE_SIGN_IN_API,gso)
                 .build();
 
         mAuth = FirebaseAuth.getInstance();
 
         View navHeaderView = navigationView.inflateHeaderView(R.layout.nav_header_main);
+        final ImageButton btnUsuarioHeader =  (ImageButton) navHeaderView.findViewById(R.id.imageButtonNavHeader);
 
-        final TextView idUsuario = (TextView) navHeaderView.findViewById(R.id.idUsuario);
-        final TextView emailUsuario = (TextView) navHeaderView.findViewById(R.id.Email);
-        final ImageView imageViewUsuario = (ImageView) navHeaderView.findViewById(R.id.imageViewNavHeader);
+        btnUsuarioHeader.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(btnUsuarioHeader.getTag() == null || (Integer)btnUsuarioHeader.getTag() == R.drawable.ic_down_arrow) {
+                    navigationView.getMenu().clear();
+                    navigationView.inflateMenu(R.menu.activity_main_user);
+                    btnUsuarioHeader.setImageResource(R.drawable.ic_up_arrow);
+                    btnUsuarioHeader.setTag(R.drawable.ic_up_arrow);
+                }
+                else{
+                    navigationView.getMenu().clear();
+                    navigationView.inflateMenu(R.menu.activity_main_drawer);
+                    btnUsuarioHeader.setImageResource(R.drawable.ic_down_arrow);
+                    btnUsuarioHeader.setTag(R.drawable.ic_down_arrow);
+                }
+            }
+        });
+
+        idUsuario = (TextView) navHeaderView.findViewById(R.id.idUsuario);
+        emailUsuario = (TextView) navHeaderView.findViewById(R.id.Email);
+        imageViewUsuario = (ImageView) navHeaderView.findViewById(R.id.imageViewNavHeader);
         try {
             user = FirebaseAuth.getInstance().getCurrentUser();
             if (user != null) {
-                String name = user.getDisplayName();
-                idUsuario.setText(name);
-                String email = user.getEmail();
-                emailUsuario.setText(email);
-                Uri photoUrl = user.getPhotoUrl();
-                imageViewUsuario.setImageBitmap(getBitmapFromURL(photoUrl.toString()));
+                updateUIFromUser();
             } else {
-                // No user is signed in
+                try {
+                    Intent signInIntent = Auth.GoogleSignInApi.getSignInIntent(mGoogleApiClient);
+                    startActivityForResult(signInIntent, RC_SIGN_IN);
+                }
+                catch (Exception ex){
+                    ex.printStackTrace();
+                }
             }
         }
         catch (Exception ex){
@@ -266,18 +290,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             @Override
             public void onClick(View view) {
                 polyline =  mMap.addPolyline(polylineOptions);
-            }
-        });
-
-        Button btnCerrarSesion = (Button) navHeaderView.findViewById(R.id.btnIniciarSesion);
-
-        btnCerrarSesion.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                FirebaseAuth.getInstance().signOut();
-                idUsuario.setText("Nombre Usuario");
-                emailUsuario.setText("Email");
-                imageViewUsuario.setImageBitmap(BitmapFactory.decodeResource(getResources(),R.drawable.burger));
             }
         });
 
@@ -419,15 +431,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == RC_SIGN_IN) {
+            FirebaseAuth.getInstance().signOut();
             GoogleSignInResult result = Auth.GoogleSignInApi.getSignInResultFromIntent(data);
 
             if (result.isSuccess()) {
-                // Google Sign In was successful, authenticate with Firebase
                 GoogleSignInAccount account = result.getSignInAccount();
                 firebaseAuthWithGoogle(account);
-            } else {
-                // Google Sign In failed, update UI appropriately
-                // ...
             }
         }
 
@@ -479,17 +488,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             Intent intent = new Intent(this, SuggestActivity.class);
             startActivity(intent);
 
-
-
         } else if (id == R.id.nav_slideshow) {
-            try {
-                Intent signInIntent = Auth.GoogleSignInApi.getSignInIntent(mGoogleApiClient);
-                startActivityForResult(signInIntent, RC_SIGN_IN);
-
-            }
-            catch (Exception ex){
-                ex.printStackTrace();
-            }
 
         } else if (id == R.id.nav_manage) {
 
@@ -497,6 +496,16 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         } else if (id == R.id.nav_send) {
 
+        } else if (id == R.id.change_user){
+            mGoogleApiClient.clearDefaultAccountAndReconnect();
+
+            try {
+                Intent signInIntent = Auth.GoogleSignInApi.getSignInIntent(mGoogleApiClient);
+                startActivityForResult(signInIntent, RC_SIGN_IN);
+            }
+            catch (Exception ex){
+                ex.printStackTrace();
+            }
         }
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -746,7 +755,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     public void onComplete(@NonNull Task<AuthResult> task) {
                         Log.d("Sig-in", "signInWithCredential:onComplete:" + task.isSuccessful());
 
-                        if (!task.isSuccessful()) {
+                        if (task.isSuccessful()) {
+                            updateUIFromUser();
+                        }
+                        else {
                             Log.w("Sig-in", "signInWithCredential", task.getException());
                             Toast.makeText(MainActivity.this, "Authentication failed.",
                                     Toast.LENGTH_SHORT).show();
@@ -805,4 +817,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             ex.printStackTrace();
         }
     }
+
+    private void updateUIFromUser(){
+        user = FirebaseAuth.getInstance().getCurrentUser();
+
+        idUsuario.setText(user.getDisplayName());
+        emailUsuario.setText(user.getEmail());
+        imageViewUsuario.setImageBitmap(getBitmapFromURL(user.getPhotoUrl().toString()));
+    }
+
 }

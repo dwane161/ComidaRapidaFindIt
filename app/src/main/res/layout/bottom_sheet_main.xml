@@ -30,7 +30,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="5dp"
-            android:baselineAligned="false">
+            android:baselineAligned="false"
+            android:weightSum="1">
 
             <TextView
                 android:id="@+id/txtRating"
@@ -45,12 +46,10 @@
                 style="?android:attr/ratingBarStyleSmall"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:paddingLeft="5dp"
+                android:layout_marginLeft="10dp"
                 android:numStars="5"
-                android:progressTint="@color/colorStars"
-                android:text="Texto de prueba"
-                android:textAppearance="@style/TextAppearance.AppCompat.Body1"
-                android:textSize="5dp" />
+                android:isIndicator="true"
+                android:progressTint="@color/colorStars" />
 
         </LinearLayout>
     </LinearLayout>
