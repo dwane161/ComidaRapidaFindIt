@@ -157,7 +157,7 @@ public class SuggestActivity extends AppCompatActivity{
                     countStars = 0.00;
 
 
-                    Restaurants restaurants = new Restaurants(restName, resMenuArray, LatLngCoord, creditCars, telephonesArray, false, countStars, null);
+                    Restaurants restaurants = new Restaurants(restName, resMenuArray, LatLngCoord, creditCars, telephonesArray, false, null, null);
 
                     key = myRef.push().getKey();
                     myRef.child("restaurants-suggest").child(key).setValue(restaurants);

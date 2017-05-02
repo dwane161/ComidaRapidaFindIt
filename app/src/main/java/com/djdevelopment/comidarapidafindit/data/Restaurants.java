@@ -16,13 +16,13 @@ public class Restaurants {
     private String creditCards;
     private String telephones;
     private boolean validated;
-    private double rating;
+    private HashMap<String,String>rating;
     private HashMap<String,String> urlImage;
 
     public Restaurants() {
     }
 
-    public Restaurants(String restName, ArrayList<String> menu, String latLong, String creditCards, String telephones, boolean validated, double rating, HashMap<String,String> urlImage) {
+    public Restaurants(String restName, ArrayList<String> menu, String latLong, String creditCards, String telephones, boolean validated, HashMap<String,String>  rating, HashMap<String,String> urlImage) {
         this.restName = restName;
         this.menu = menu;
         this.latLong = latLong;
@@ -33,11 +33,11 @@ public class Restaurants {
         this.urlImage = urlImage;
     }
 
-    public double getRating() {
+    public HashMap<String,String>  getRating() {
         return rating;
     }
 
-    public void setRating(double rating) {
+    public void setRating(HashMap<String,String>  rating) {
         this.rating = rating;
     }
 

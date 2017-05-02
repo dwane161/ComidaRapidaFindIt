@@ -139,103 +139,136 @@
                 android:src="@drawable/ic_calculation_operations_minus_sign"/>
         </LinearLayout>
 
-        <LinearLayout
+        <android.support.v4.widget.NestedScrollView
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginTop="15dp"
-            android:id="@+id/linearLayoutCreditCard"
-            android:paddingLeft="10dp"
-            android:layout_below="@+id/separatorAbove"
-            android:layout_alignParentLeft="true"
-            android:layout_alignParentStart="true">
+            android:layout_height="match_parent"
+            android:layout_below="@id/separatorAbove">
 
-            <ImageView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:src="@drawable/ic_credit_card"
-                />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:paddingLeft="10dp"
-                android:layout_below="@id/linearLayout"
-                android:id="@+id/txtCreditCard"
-                android:text="TextView de prueba"/>
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginTop="15dp"
-            android:id="@+id/linearLayoutHorario"
-            android:paddingLeft="10dp"
-            android:layout_below="@+id/linearLayoutCreditCard"
-            android:layout_alignParentLeft="true">
-
-            <ImageView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:src="@drawable/ic_time"
-                />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_below="@id/linearLayout"
-                android:paddingLeft="10dp"
-                android:text="TextView de prueba" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:id="@+id/linearLayoutMenu"
-            android:orientation="horizontal"
-            android:layout_marginTop="10dp"
-            android:paddingLeft="10dp"
-            android:layout_below="@+id/linearLayoutHorario"
-            android:layout_alignParentLeft="true">
-
-            <Button
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:id="@+id/btnMostrarMenu"
-                android:background="@drawable/selector_xml_name"
-                android:drawableLeft="@drawable/ic_menu"
-                android:layout_gravity="start"
-                android:textAlignment="viewStart"
-                android:drawablePadding="10dp"
-                android:text="Menu"/>
-        </LinearLayout>
+                android:orientation="vertical">
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:id="@+id/linearLayoutTelefono"
-            android:layout_marginTop="15dp"
-            android:paddingLeft="10dp"
-            android:layout_below="@+id/linearLayoutMenu"
-            android:layout_alignParentLeft="true">
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginTop="15dp"
+                    android:id="@+id/linearLayoutCreditCard"
+                    android:paddingLeft="10dp"
+                    android:layout_below="@+id/separatorAbove"
+                    android:layout_alignParentLeft="true"
+                    android:layout_alignParentStart="true">
 
-            <ImageView
-                android:layout_width="wrap_content"
+                    <ImageView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:src="@drawable/ic_credit_card"
+                        />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:paddingLeft="10dp"
+                        android:layout_below="@id/linearLayout"
+                        android:id="@+id/txtCreditCard"
+                        android:text="TextView de prueba"/>
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginTop="15dp"
+                    android:id="@+id/linearLayoutHorario"
+                    android:paddingLeft="10dp"
+                    android:layout_below="@+id/linearLayoutCreditCard"
+                    android:layout_alignParentLeft="true">
+
+                    <ImageView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:src="@drawable/ic_time"
+                        />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_below="@id/linearLayout"
+                        android:paddingLeft="10dp"
+                        android:text="TextView de prueba" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/linearLayoutMenu"
+                    android:orientation="horizontal"
+                    android:layout_marginTop="10dp"
+                    android:paddingLeft="10dp"
+                    android:layout_below="@+id/linearLayoutHorario"
+                    android:layout_alignParentLeft="true">
+
+                    <Button
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:id="@+id/btnMostrarMenu"
+                        android:background="@drawable/selector_xml_name"
+                        android:drawableLeft="@drawable/ic_menu"
+                        android:layout_gravity="start"
+                        android:textAlignment="viewStart"
+                        android:drawablePadding="10dp"
+                        android:text="Menu"/>
+                </LinearLayout>
+
+                <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:src="@drawable/ic_phonecall2"
-                />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:id="@+id/lblTelephone"
-                android:layout_height="wrap_content"
-                android:layout_below="@id/linearLayout"
+                android:orientation="horizontal"
+                android:id="@+id/linearLayoutTelefono"
+                android:layout_marginTop="15dp"
                 android:paddingLeft="10dp"
-                android:text="TextView de prueba" />
-        </LinearLayout>
+                android:layout_below="@+id/linearLayoutMenu"
+                android:layout_alignParentLeft="true">
 
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/ic_phonecall2"
+                    />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:id="@+id/lblTelephone"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@id/linearLayout"
+                    android:paddingLeft="10dp"
+                    android:text="TextView de prueba" />
+            </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:id="@+id/linearLayoutRating"
+                    android:layout_marginTop="15dp"
+                    android:paddingLeft="10dp"
+                    android:layout_below="@+id/linearLayoutTelefono"
+                    android:layout_alignParentLeft="true">
+
+                    <Button
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:id="@+id/btnMostrarRating"
+                        android:background="@drawable/selector_xml_name"
+                        android:drawableLeft="@drawable/ic_star"
+                        android:layout_gravity="start"
+                        android:textAlignment="viewStart"
+                        android:drawablePadding="10dp"
+                        android:text="Rating"/>
+                </LinearLayout>
+            </LinearLayout>
+        </android.support.v4.widget.NestedScrollView>
 
     </RelativeLayout>
 

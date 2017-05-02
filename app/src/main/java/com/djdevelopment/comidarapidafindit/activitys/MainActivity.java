@@ -101,6 +101,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ThreadFactory;
 
 import br.com.jeancsanchez.photoviewslider.PhotosViewSlider;
@@ -128,21 +129,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     //BottonSheet view
 
-    /*
-
-        bottomSheet = findViewById(R.id.bottomSheet);
-        bottomSheetBehavior = BottomSheetBehavior.from(findViewById(R.id.bottomSheet));
-        txtBottomSheet = (TextView) findViewById(R.id.txtBottomSheet);
-        txtRating = (TextView) findViewById(R.id.txtRating);
-        ratingBarBottom = (RatingBar) findViewById(R.id.ratingBarBottom);
-        txtCreditCards = (TextView) findViewById(R.id.txtCreditCard);
-        linearLayoutPrincipal = (LinearLayout) findViewById(R.id.linearLayoutPrincipal);
-        lblTelephone = (TextView) findViewById(R.id.lblTelephone);
-        floatingActionButton = (FloatingActionButton) findViewById(R.id.floatingActionButton);
-        btnMostarMenu =  (Button) findViewById(R.id.btnMostrarMenu);
-        mThumbnailPreview = (MultiImageView) findViewById(R.id.imageViewDescription);
-        btnRating = (Button) findViewById(R.id.btnRating);
-     */
     @BindView(R.id.RelativeLayoutBottomSheet) RelativeLayout relativeLayoutBottomSheet;
     @BindView(R.id.txtRating) TextView txtRating;
     @BindView(R.id.txtCreditCard) TextView txtCreditCards;
@@ -152,6 +138,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     @BindView(R.id.ratingBarBottom) RatingBar ratingBarBottom;
     @BindView(R.id.floatingActionButton) FloatingActionButton floatingActionButton;
     @BindView(R.id.btnMostrarMenu) Button btnMostarMenu;
+    @BindView(R.id.btnMostrarRating) Button btnMostrarRating;
     @BindView(R.id.btnIniciarSesion) Button btnIniciarSesion;
     @BindView(R.id.btnRating) Button btnRating;
     @BindView(R.id.bottomSheet) BottomSheetBehavior bottomSheetBehavior;
@@ -176,6 +163,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     ArrayList<String> commentsUsersImages = new ArrayList<>();
 
     NavigationView navigationView;
+
+    ArrayList<String> ratingList = new ArrayList<>();
+    float rating = 0;
+
+    FirebaseUser user;
 
     int index = 0;
 
@@ -219,6 +211,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         btnRating = (Button) findViewById(R.id.btnRating);
         relativeLayoutBottomSheet = (RelativeLayout) findViewById(R.id.RelativeLayoutBottomSheet);
         photoViewSlider = (PhotosViewSlider) findViewById(R.id.photosViewSlider);
+        btnMostrarRating = (Button) findViewById(R.id.btnMostrarRating);
 
         floatingActionButton.setVisibility(FloatingActionButton.INVISIBLE);
 
@@ -230,8 +223,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         retrieveDataFromFirebase();
 
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-//                .requestId()
-                .requestIdToken("224098914874-v53bv24ili6ik7i8u6bof8bkqlqal6ar.apps.googleusercontent.com")
+                .requestIdToken("599878823243-aj6quill8ru73tchkpp4nciiq3rl1kd6.apps.googleusercontent.com")
                 .requestEmail()
                 .build();
 
@@ -254,7 +246,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         final TextView emailUsuario = (TextView) navHeaderView.findViewById(R.id.Email);
         final ImageView imageViewUsuario = (ImageView) navHeaderView.findViewById(R.id.imageViewNavHeader);
         try {
-            FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+            user = FirebaseAuth.getInstance().getCurrentUser();
             if (user != null) {
                 String name = user.getDisplayName();
                 idUsuario.setText(name);
@@ -309,6 +301,30 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
         });
 
+        btnMostrarRating.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                ratingList.clear();
+                try {
+                    for (String restMenu : restaurants.get(markerSelected).getRating().values()) {
+                        try {
+                            JSONObject jObj = new JSONObject(restMenu);
+                            ratingList.add("Puntuación: " + jObj.getString("rating") + "\n" + "Comentario: "+jObj.getString("comment"));
+                        } catch (JSONException e) {
+                            Log.e("MYAPP", "unexpected JSON exception", e);
+                        }
+                    }
+                    new MaterialDialog.Builder(MainActivity.this)
+                            .title("Menu")
+                            .items(ratingList)
+                            .show();
+                }
+                catch (Exception ex){
+                    ex.printStackTrace();
+                }
+            }
+        });
+
         btnRating.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -326,8 +342,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                     float rating = ratingBarAddComments.getRating();
                                     String str = txtComments.getText().toString();
 
-                                    //TODO REMPLAZAR rating2 CON rating
-                                    myRef.child(keys.get(markerSelected)).child("rating2").push().setValue("{ \"rating\" : \""+rating+"\", \"comment\" : \""+str+"\"}");
+                                    myRef.child(keys.get(markerSelected)).child("rating").push().setValue("{ \"rating\" : \""+rating+"\", \"comment\" : \""+str+"\", \"userName\" : \""+user.getDisplayName()+"\", \"photoURL\" : \""+user.getPhotoUrl()+"\"}");
                                 }
                                 catch (Exception ex){
                                     ex.printStackTrace();
@@ -547,9 +562,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                                     bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
                                     txtBottomSheet.setText(restaurants.get(markerSelected).getRestName());
-                                    txtRating.setText(String.valueOf(restaurants.get(markerSelected).getRating()));
+
+                                    getRatingList(markerSelected);
+
+                                    txtRating.setText(String.valueOf(rating));
                                     txtCreditCards.setText(restaurants.get(markerSelected).getCreditCards());
-                                    ratingBarBottom.setRating((float)restaurants.get(markerSelected).getRating());
+                                    ratingBarBottom.setRating(rating);
                                     lblTelephone.setText(restaurants.get(markerSelected).getTelephones());
 
                                     photoViewSlider.setVisibility(View.INVISIBLE);
@@ -752,6 +770,39 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             e.printStackTrace();
             Log.e("Exception",e.getMessage());
             return null;
+        }
+    }
+
+    public void getRatingList(int markerSelected){
+        try {
+            rating = 0;
+            if(ratingList.size() != 0){
+                ratingList.clear();
+            }
+            for (String restRating : restaurants.get(markerSelected).getRating().values()) {
+                try {
+                    JSONObject jObj = new JSONObject(restRating);
+                    String var = jObj.getString("rating");
+                    ratingList.add(jObj.getString("rating"));
+                } catch (JSONException e) {
+                    Log.e("MYAPP", "unexpected JSON exception", e);
+                }
+                catch (Exception ex){
+                    ex.printStackTrace();
+                }
+            }
+            int i;
+            for(i = 0; i<ratingList.size();i++){
+                rating = Float.parseFloat(ratingList.get(i)) + rating;
+
+            }
+            rating = rating / i;
+
+            rating = Math.round(rating * 100.0f) / 100.0f;
+
+        }
+        catch (Exception ex){
+            ex.printStackTrace();
         }
     }
 }
