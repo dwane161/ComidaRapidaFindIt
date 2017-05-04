@@ -4,12 +4,15 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.media.MediaRecorder;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -35,6 +38,10 @@ import com.djdevelopment.comidarapidafindit.data.MenuService;
 import com.yuncun.swipeableweekview.WeekViewAdapter;
 import com.yuncun.swipeableweekview.WeekViewSwipeable;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -94,6 +101,7 @@ public class UtilUI {
 
                     txtMotelServiceName.setText("");
                     txtMotelServicePrice.setText("");
+                    txtMotelServiceName.requestFocus();
                     callbackPositiveAction.run();
 
                 }
@@ -393,5 +401,23 @@ public class UtilUI {
             showAlertDialog(context, context.getString(R.string.message), context.getString(R.string.msInternetNoConnection), R.string.ok, callBackConfirmButton );
         }
         return connection;
+    }
+
+    public static Bitmap getBitmapFromURL(String src) {
+        try {
+            Log.e("src",src);
+            URL url = new URL(src);
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setDoInput(true);
+            connection.connect();
+            InputStream input = connection.getInputStream();
+            Bitmap myBitmap = BitmapFactory.decodeStream(input);
+            Log.e("Bitmap","returned");
+            return myBitmap;
+        } catch (IOException e) {
+            e.printStackTrace();
+            Log.e("Exception",e.getMessage());
+            return null;
+        }
     }
 }

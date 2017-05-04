@@ -17,7 +17,8 @@
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
             android:background="?attr/colorPrimary"
-            app:popupTheme="@style/AppTheme.PopupOverlay" />
+            app:popupTheme="@style/AppTheme.PopupOverlay"
+            android:animateLayoutChanges="true"/>
 
     </android.support.design.widget.AppBarLayout>
 
@@ -52,9 +53,9 @@
 
     <br.com.jeancsanchez.photoviewslider.PhotosViewSlider
         android:id="@+id/photosViewSlider"
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="bottom|center_horizontal"
+        android:layout_gravity="bottom"
         app:layout_anchor="@+id/include"
         app:layout_anchorGravity="top|center_horizontal" />
 

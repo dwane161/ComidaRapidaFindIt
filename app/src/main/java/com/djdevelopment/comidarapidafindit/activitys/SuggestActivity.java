@@ -37,6 +37,7 @@ import android.widget.RatingBar;
 import android.widget.RelativeLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
+import android.widget.ToggleButton;
 
 import com.djdevelopment.comidarapidafindit.R;
 import com.djdevelopment.comidarapidafindit.data.Image;
@@ -76,6 +77,7 @@ public class SuggestActivity extends AppCompatActivity{
     LinearLayout cardViewCreditCards = null;
     LinearLayout cardViewLocation = null;
     LinearLayout cardViewSchedule = null;
+    ToggleButton toogleDelivery;
 
     String key;
 
@@ -100,6 +102,7 @@ public class SuggestActivity extends AppCompatActivity{
         cardViewCreditCards =  (LinearLayout)findViewById(R.id.cardViewCreditCards);
         cardViewLocation =  (LinearLayout)findViewById(R.id.cardViewLocation);
         cardViewSchedule =  (LinearLayout) findViewById(R.id.cardViewSchedule);
+        toogleDelivery = (ToggleButton) findViewById(R.id.toogleDelivery);
 
         menuServices = new ArrayList<>();
         custom_font2 = Typeface.createFromAsset(SuggestActivity.this.getAssets(), "Roboto-Thin.ttf");
@@ -156,8 +159,7 @@ public class SuggestActivity extends AppCompatActivity{
                     //Rating de restaurante
                     countStars = 0.00;
 
-
-                    Restaurants restaurants = new Restaurants(restName, resMenuArray, LatLngCoord, creditCars, telephonesArray, false, null, null);
+                    Restaurants restaurants = new Restaurants(restName, resMenuArray, LatLngCoord, creditCars, telephonesArray, false, null, null,toogleDelivery.isChecked());
 
                     key = myRef.push().getKey();
                     myRef.child("restaurants-suggest").child(key).setValue(restaurants);
@@ -225,7 +227,7 @@ public class SuggestActivity extends AppCompatActivity{
     }
 
     private void addNewServiceModel(){
-        ((Button)findViewById(R.id.btnAddNewServiceModel)).setOnClickListener( new View.OnClickListener() {
+        (findViewById(R.id.btnAddNewServiceModel)).setOnClickListener( new View.OnClickListener() {
 
             @Override
             public void onClick(View v) {

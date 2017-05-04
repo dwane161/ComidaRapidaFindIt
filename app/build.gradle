@@ -21,6 +21,9 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+    lintOptions {
+        disable 'RestrictedApi'
+    }
 }
 
 dependencies {
@@ -30,21 +33,26 @@ dependencies {
     })
     compile 'com.android.support:animated-vector-drawable:25.2.0'
     compile 'com.jakewharton:butterknife:8.5.1'
+    annotationProcessor 'com.jakewharton:butterknife-compiler:8.5.1'
     compile 'com.yuncun.weekviewswipeable:weekviewswipeable:1.0.0'
     compile 'com.google.firebase:firebase-auth:10.0.1'
+    compile 'com.google.firebase:firebase-database:10.0.1'
+    compile 'com.google.firebase:firebase-storage:10.0.1'
+    compile 'com.google.firebase:firebase-messaging:9.6.1'
     compile 'com.akexorcist:googledirectionlibrary:1.0.5'
     compile 'com.github.stfalcon:multiimageview:0.1'
+    compile 'com.github.mzelzoghbi:zgallery:0.3'
     compile 'com.android.support:mediarouter-v7:25.2.0'
     compile 'com.google.android.gms:play-services:10.0.1'
     compile 'com.google.android.gms:play-services-auth:10.0.1'
-    compile 'com.google.firebase:firebase-database:10.0.1'
-    compile 'com.google.firebase:firebase-storage:10.0.1'
     compile 'com.afollestad.material-dialogs:commons:0.9.4.4'
     compile "com.android.support:appcompat-v7:25.3.1"
     compile 'com.android.support:design:25.3.1'
     compile 'com.android.support:support-v4:25.3.1'
     testCompile 'junit:junit:4.12'
     compile project(path: ':photoviewslider')
+    compile 'com.android.support.constraint:constraint-layout:1.0.0-alpha9'
 }
+
 
 apply plugin: 'com.google.gms.google-services'

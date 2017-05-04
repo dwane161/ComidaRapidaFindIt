@@ -2,18 +2,18 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="400dp"
+    android:layout_height="match_parent"
     android:background="#FFFFFF"
     android:orientation="vertical"
     app:behavior_hideable="true"
-    app:behavior_peekHeight="100dp"
+    app:behavior_peekHeight="80dp"
     app:layout_behavior="@string/bottom_sheet_behavior">
 
     <LinearLayout
         android:id="@+id/linearLayoutPrincipal"
         android:layout_width="match_parent"
-        android:layout_height="78dp"
-        android:layout_marginLeft="20dp"
+        android:layout_height="58dp"
+        android:layout_marginLeft="10dp"
         android:baselineAligned="false"
         android:orientation="vertical">
 
@@ -21,7 +21,6 @@
             android:id="@+id/txtBottomSheet"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="BOTTOM SHEET"
             android:paddingLeft="5dp"
             android:textAppearance="@style/TextAppearance.AppCompat.Title"
             android:textSize="25sp" />
@@ -76,6 +75,7 @@
                 <Button
                     android:layout_width="match_parent"
                     android:background="@drawable/selector_xml_name"
+                    android:id="@+id/btnLlamarSitio"
                     android:drawableTop="@drawable/ic_phonecall"
                     android:textAlignment="center"
                     android:text="Llamar"
@@ -143,10 +143,9 @@
             android:layout_height="match_parent"
             android:layout_below="@id/separatorAbove">
 
-            <LinearLayout
+            <RelativeLayout
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:orientation="vertical">
+                android:layout_height="match_parent">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -155,7 +154,6 @@
                     android:layout_marginTop="15dp"
                     android:id="@+id/linearLayoutCreditCard"
                     android:paddingLeft="10dp"
-                    android:layout_below="@+id/separatorAbove"
                     android:layout_alignParentLeft="true"
                     android:layout_alignParentStart="true">
 
@@ -266,7 +264,77 @@
                         android:drawablePadding="10dp"
                         android:text="Rating"/>
                 </LinearLayout>
-            </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:id="@+id/linearLayoutDelivery"
+                    android:layout_marginTop="15dp"
+                    android:paddingLeft="10dp"
+                    android:layout_below="@+id/linearLayoutRating">
+
+                    <ImageView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:src="@drawable/ic_motorcycle"
+                        />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:id="@+id/lblDelivery"
+                        android:layout_height="wrap_content"
+                        android:layout_below="@id/linearLayout"
+                        android:paddingLeft="10dp"
+                        android:text="TextView de prueba" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="15dp"
+                    android:id="@+id/linearLayoutImageBottomSheet"
+                    android:orientation="vertical"
+                    android:paddingLeft="10dp"
+                    android:layout_below="@+id/linearLayoutDelivery">
+                    <RelativeLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="80dp">
+                        <ImageView
+                            android:id="@+id/imageViewBottomSheet"
+                            android:layout_width="match_parent"
+                            android:scaleType="centerCrop"
+                            android:layout_height="match_parent"/>
+
+                        <TextView
+                            android:id="@+id/textViewImageBottomSheet"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_alignLeft="@+id/imageViewBottomSheet"
+                            android:layout_alignTop="@+id/imageViewBottomSheet"
+                            android:layout_alignRight="@+id/imageViewBottomSheet"
+                            android:layout_alignBottom="@+id/imageViewBottomSheet"
+                            android:layout_margin="1dp"
+                            android:gravity="bottom"
+                            android:textColor="#000000" />
+                    </RelativeLayout>
+                    <ImageView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:src="@drawable/ic_calculation_operations_minus_sign"/>
+                    <Button
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:background="@drawable/selector_xml_name"
+                        android:drawableLeft="@drawable/ic_image_add_button"
+                        android:layout_gravity="start"
+                        android:textAlignment="viewStart"
+                        android:drawablePadding="10dp"
+                        android:text="Agregar imagen" />
+                </LinearLayout>
+
+            </RelativeLayout>
+
         </android.support.v4.widget.NestedScrollView>
 
     </RelativeLayout>

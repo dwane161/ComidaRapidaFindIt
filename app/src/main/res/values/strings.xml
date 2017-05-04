@@ -156,5 +156,14 @@
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="change_user">Cambiar cuenta</string>
-    <string name="google_api_user_key">599878823243-aj6quill8ru73tchkpp4nciiq3rl1kd6.apps.googleusercontent.com</string>
+    <string name="google_api_user_key">224098914874-v53bv24ili6ik7i8u6bof8bkqlqal6ar.apps.googleusercontent.com</string>
+    <string name="nombre">Nombre</string>
+    <string name="datos_del_sitio">Datos del sitio</string>
+    <string name="rating_layout">Escriba una reseña sobre este sitio</string>
+    <string name="toggle_button_delivery_yes">Si</string>
+    <string name="toggle_button_delivery_no">No</string>
+    <string name="available_delivery">Delivery disponible</string>
+    <string name="not_available_delivery">Delivery NO disponible</string>
+    <string name="menu_not_available">No menu disponible actualmente</string>
+    <string name="share_app">Desgarga la app</string>
 </resources>
