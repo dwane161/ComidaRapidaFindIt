@@ -213,6 +213,7 @@
                         android:background="@drawable/selector_xml_name"
                         android:drawableLeft="@drawable/ic_menu"
                         android:layout_gravity="start"
+                        android:textAllCaps="false"
                         android:textAlignment="viewStart"
                         android:drawablePadding="10dp"
                         android:text="Menu"/>
@@ -261,6 +262,7 @@
                         android:drawableLeft="@drawable/ic_star"
                         android:layout_gravity="start"
                         android:textAlignment="viewStart"
+                        android:textAllCaps="false"
                         android:drawablePadding="10dp"
                         android:text="Rating"/>
                 </LinearLayout>
@@ -329,6 +331,7 @@
                         android:drawableLeft="@drawable/ic_image_add_button"
                         android:layout_gravity="start"
                         android:textAlignment="viewStart"
+                        android:textAllCaps="false"
                         android:drawablePadding="10dp"
                         android:text="Agregar imagen" />
                 </LinearLayout>
