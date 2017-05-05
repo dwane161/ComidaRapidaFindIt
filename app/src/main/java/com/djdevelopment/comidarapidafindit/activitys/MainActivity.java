@@ -19,14 +19,19 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.StrictMode;
 import android.support.annotation.NonNull;
+import android.support.design.widget.AppBarLayout;
 import android.support.design.widget.BottomSheetBehavior;
+import android.support.design.widget.CollapsingToolbarLayout;
+import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.graphics.drawable.DrawableCompat;
 import android.support.v4.view.GravityCompat;
+import android.support.v4.view.ViewPager;
 import android.support.v4.widget.DrawerLayout;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.AppCompatDrawableManager;
@@ -34,9 +39,12 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.animation.AccelerateInterpolator;
+import android.view.animation.DecelerateInterpolator;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
@@ -59,6 +67,9 @@ import com.akexorcist.googledirection.util.DirectionConverter;
 import com.djdevelopment.comidarapidafindit.R;
 import com.djdevelopment.comidarapidafindit.data.Ratings;
 import com.djdevelopment.comidarapidafindit.data.Restaurants;
+import com.djdevelopment.comidarapidafindit.lib.BottomSheetBehaviorGoogleMapsLike;
+import com.djdevelopment.comidarapidafindit.lib.MergedAppBarLayoutBehavior;
+import com.djdevelopment.comidarapidafindit.tools.ItemPagerAdapter;
 import com.djdevelopment.comidarapidafindit.tools.UtilUI;
 import com.google.android.gms.auth.api.Auth;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
@@ -152,7 +163,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     @BindView(R.id.imageViewBottomSheet) ImageView imageViewBottomSheet;
     @BindView(R.id.linearLayoutImageBottomSheet) LinearLayout linearLayoutImageBottomSheet;
     @BindView(R.id.textViewImageBottomSheet) TextView textViewImageBottomSheet;
-    BottomSheetBehavior bottomSheetBehavior;
+    TextView bottomSheetTextView;
+    MergedAppBarLayoutBehavior mergedAppBarLayoutBehavior;
+    ImageView imageView;
     RatingBar ratingBarAddComments;
     EditText txtComments;
     NavigationView navigationView;
@@ -298,7 +311,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     @OnClick(R.id.bottomSheet)
     void setBottomSheetBehavior(){
-        bottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
     }
 
     @OnClick(R.id.imageViewBottomSheet)
@@ -315,6 +327,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
+
+        ActionBar actionBar = getSupportActionBar();
+        if (actionBar != null) {
+            actionBar.setDisplayHomeAsUpEnabled(true);
+            actionBar.setTitle(" ");
+        }
 
         setSupportActionBar(toolbar);
 
@@ -335,10 +353,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         StrictMode.setThreadPolicy(policy);
 
-        bottomSheetBehavior = BottomSheetBehavior.from(findViewById(R.id.bottomSheet));
-
         //Put BottomSheet Hidden when the app begin
-        bottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
         floatingActionButton.setVisibility(View.INVISIBLE);
 
         bottomSheetBehavior();
@@ -414,7 +429,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         mMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
             @Override
             public void onMapClick(LatLng latLng) {
-                bottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
                 try {
                     polyline.remove();
                 }
@@ -616,8 +630,15 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                 public boolean onMarkerClick(Marker marker) {
                                     //TODO AGREGAR LOS DEMAS CAMPOS DEL RESTAURANTE
                                     markerSelected = Integer.parseInt(marker.getSnippet());
+                                    try {
+                                        ItemPagerAdapter adapter = new ItemPagerAdapter(MainActivity.this,photosUrl);
+                                        ViewPager viewPager = (ViewPager) findViewById(R.id.pager);
 
-                                    bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
+                                        viewPager.setAdapter(adapter);
+                                    }
+                                    catch (Exception ex){ex.printStackTrace();}
+                                    mergedAppBarLayoutBehavior.setToolbarTitle(restaurants.get(markerSelected).getRestName());
+
                                     txtBottomSheet.setText(restaurants.get(markerSelected).getRestName());
                                     getRatingList(markerSelected);
                                     if(restaurants.get(markerSelected).getDelivery()){
@@ -696,55 +717,52 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     private void bottomSheetBehavior(){
-        bottomSheetBehavior.setBottomSheetCallback(new BottomSheetBehavior.BottomSheetCallback() {
+        CoordinatorLayout coordinatorLayout = (CoordinatorLayout) findViewById(R.id.coordinatorlayout);
+        View bottomSheet = coordinatorLayout.findViewById(R.id.bottom_sheet);
+        final BottomSheetBehaviorGoogleMapsLike behavior = BottomSheetBehaviorGoogleMapsLike.from(bottomSheet);
+        behavior.addBottomSheetCallback(new BottomSheetBehaviorGoogleMapsLike.BottomSheetCallback() {
             @Override
-            public void onStateChanged(@NonNull final View bottomSheet, int newState) {
-                switch (newState){
-                    case BottomSheetBehavior.STATE_DRAGGING:
-                        bottomSheet.setBackgroundColor(getResources().getColor(R.color.colorPrimary));
-                        relativeLayoutBottomSheet.setBackgroundColor(getResources().getColor(R.color.colorBlanco));
-                        toggle.syncState();
-                        toolbar.setSubtitle("");
-                        toolbar.setTitle(R.string.app_name);
+            public void onStateChanged(@NonNull View bottomSheet, int newState) {
+                switch (newState) {
+                    case BottomSheetBehaviorGoogleMapsLike.STATE_COLLAPSED:
+                        Log.d("bottomsheet-", "STATE_COLLAPSED");
                         break;
-                    case BottomSheetBehavior.STATE_EXPANDED:
-                        bottomSheet.setBackgroundColor(getResources().getColor(R.color.colorPrimary));
-                        relativeLayoutBottomSheet.setBackgroundColor(getResources().getColor(R.color.colorBlanco));
-                        toolbar.setNavigationIcon(null);
-                        photoViewSlider.setVisibility(View.INVISIBLE);
-                        toolbar.setTitle(restaurants.get(markerSelected).getRestName());
-                        //TODO CHANGE FOR THE RESTAURANT TYPE
-                        toolbar.setSubtitle(String.valueOf(rating));
+                    case BottomSheetBehaviorGoogleMapsLike.STATE_DRAGGING:
+                        Log.d("bottomsheet-", "STATE_DRAGGING");
                         break;
-                    case BottomSheetBehavior.STATE_COLLAPSED:
-                        animateColor(Color.rgb(63,81,181), Color.rgb(255,255,255), 200);
-                        relativeLayoutBottomSheet.setBackgroundColor(Color.rgb(255,255,255));
-                        mThumbnailPreview.setVisibility(View.VISIBLE);
-                        toolbar.setTitle(R.string.app_name);
-                        toggle.syncState();
-                        toolbar.setSubtitle(null);
-                        if(restaurants.get(markerSelected).getUrlImage() != null){
-                            photoViewSlider.setVisibility(View.VISIBLE);
-                        }
-                        floatingActionButton.setVisibility(FloatingActionButton.VISIBLE);
+                    case BottomSheetBehaviorGoogleMapsLike.STATE_EXPANDED:
+                        Log.d("bottomsheet-", "STATE_EXPANDED");
                         break;
-                    case BottomSheetBehavior.STATE_HIDDEN:
-                        mThumbnailPreview.setVisibility(View.INVISIBLE);
-                        toolbar.setSubtitle(null);
-                        toggle.syncState();
-                        toolbar.setTitle(R.string.app_name);
-                        photoViewSlider.setVisibility(View.INVISIBLE);
-                        floatingActionButton.setVisibility(FloatingActionButton.INVISIBLE);
+                    case BottomSheetBehaviorGoogleMapsLike.STATE_ANCHOR_POINT:
+                        Log.d("bottomsheet-", "STATE_ANCHOR_POINT");
+                        break;
+                    case BottomSheetBehaviorGoogleMapsLike.STATE_HIDDEN:
+                        Log.d("bottomsheet-", "STATE_HIDDEN");
+                        break;
+                    default:
+                        Log.d("bottomsheet-", "STATE_SETTLING");
                         break;
                 }
-
             }
 
             @Override
             public void onSlide(@NonNull View bottomSheet, float slideOffset) {
-
             }
         });
+
+        AppBarLayout mergedAppBarLayout = (AppBarLayout) findViewById(R.id.merged_appbarlayout);
+        mergedAppBarLayoutBehavior = MergedAppBarLayoutBehavior.from(mergedAppBarLayout);
+        mergedAppBarLayoutBehavior.setToolbarTitle("Tittle");
+        mergedAppBarLayoutBehavior.setNavigationOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                behavior.setState(BottomSheetBehaviorGoogleMapsLike.STATE_COLLAPSED);
+            }
+        });
+
+
+
+        behavior.setState(BottomSheetBehaviorGoogleMapsLike.STATE_ANCHOR_POINT);
     }
 
     private Location getLastKnownLocation() {
@@ -882,7 +900,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                 }
                             }
                             photoViewSlider.setVisibility(View.VISIBLE);
-                            photoViewSlider.initializePhotosUrls(photosUrl);
                             imageViewBottomSheet.setImageBitmap(utilUI.getBitmapFromURL(photosUrl.get(0)));
                         }
                         catch (Exception ex){
