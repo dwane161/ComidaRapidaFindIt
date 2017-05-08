@@ -5,6 +5,7 @@
     android:id="@+id/linearLayoutRatingDetail">
     <LinearLayout
         android:layout_width="match_parent"
+        android:layout_marginLeft="@dimen/activity_horizontal_margin"
         android:layout_height="wrap_content"
         android:orientation="horizontal">
         <ImageView

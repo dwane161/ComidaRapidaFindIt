@@ -41,14 +41,12 @@ public class RatingAdapter extends RecyclerView.Adapter<RatingAdapter.ViewHolder
 
     @Override
     public RatingAdapter.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        Context context = parent.getContext();
-        LayoutInflater inflater = LayoutInflater.from(context);
 
         // Inflate the custom layout
-        View contactView = inflater.inflate(R.layout.layout_rating_detail, parent, false);
+        View ratingView = LayoutInflater.from(parent.getContext()).inflate(R.layout.layout_rating_detail, parent, false);
 
         // Return a new holder instance
-        ViewHolder viewHolder = new ViewHolder(contactView);
+        ViewHolder viewHolder = new ViewHolder(ratingView);
         return viewHolder;
     }
 
@@ -75,7 +73,7 @@ public class RatingAdapter extends RecyclerView.Adapter<RatingAdapter.ViewHolder
 
     @Override
     public int getItemCount() {
-       return mRatings.size();
+       return (mRatings.size()>=4) ? 4 :mRatings.size();
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {

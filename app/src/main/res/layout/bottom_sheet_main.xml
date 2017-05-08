@@ -19,9 +19,8 @@
 
         <TextView
             android:id="@+id/txtBottomSheet"
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Pruebaaaa"
             android:paddingLeft="5dp"
             android:textAppearance="@style/TextAppearance.AppCompat.Title"
             android:textSize="25sp" />
@@ -221,29 +220,29 @@
                 </LinearLayout>
 
                 <LinearLayout
-                    android:layout_width="match_parent"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:id="@+id/linearLayoutTelefono"
+                android:layout_marginTop="15dp"
+                android:paddingLeft="10dp"
+                android:layout_below="@+id/linearLayoutMenu"
+                android:layout_alignParentLeft="true">
+
+                <ImageView
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:id="@+id/linearLayoutTelefono"
-                    android:layout_marginTop="15dp"
+                    android:src="@drawable/ic_phonecall2"
+                    />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:id="@+id/lblTelephone"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@id/linearLayout"
                     android:paddingLeft="10dp"
-                    android:layout_below="@+id/linearLayoutMenu"
-                    android:layout_alignParentLeft="true">
-
-                    <ImageView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:src="@drawable/ic_phonecall2"
-                        />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:id="@+id/lblTelephone"
-                        android:layout_height="wrap_content"
-                        android:layout_below="@id/linearLayout"
-                        android:paddingLeft="10dp"
-                        android:text="TextView de prueba" />
-                </LinearLayout>
+                    android:text="TextView de prueba" />
+            </LinearLayout>
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -335,6 +334,48 @@
                         android:textAllCaps="false"
                         android:drawablePadding="10dp"
                         android:text="Agregar imagen" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:orientation="vertical"
+                    android:id="@+id/linearLayoutRatingDetail"
+                    android:layout_below="@+id/linearLayoutImageBottomSheet">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Todas las opiniones"
+                        android:textStyle="bold"
+                        android:textSize="18sp"
+                        android:textColor="#000"
+                        android:layout_marginLeft="@dimen/activity_horizontal_margin"
+                        android:layout_marginTop="20dp"
+                        android:layout_marginBottom="20dp"/>
+
+                    <android.support.v7.widget.RecyclerView
+                        android:id="@+id/rvRating"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content" />
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_below="@+id/linearLayoutRatingDetail">
+
+                    <Button
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:background="@drawable/selector_xml_name"
+                        android:textAlignment="textStart"
+                        android:paddingLeft="60dp"
+                        android:textColor="@color/colorPrimary"
+                        android:text="Mas opiniones"
+                        />
+
                 </LinearLayout>
 
             </RelativeLayout>
