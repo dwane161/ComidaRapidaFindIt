@@ -19,19 +19,14 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.StrictMode;
 import android.support.annotation.NonNull;
-import android.support.design.widget.AppBarLayout;
 import android.support.design.widget.BottomSheetBehavior;
-import android.support.design.widget.CollapsingToolbarLayout;
-import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.graphics.drawable.DrawableCompat;
 import android.support.v4.view.GravityCompat;
-import android.support.v4.view.ViewPager;
 import android.support.v4.widget.DrawerLayout;
-import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.AppCompatDrawableManager;
@@ -39,12 +34,10 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
-import android.view.LayoutInflater;
+import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.animation.AccelerateInterpolator;
-import android.view.animation.DecelerateInterpolator;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
@@ -67,9 +60,6 @@ import com.akexorcist.googledirection.util.DirectionConverter;
 import com.djdevelopment.comidarapidafindit.R;
 import com.djdevelopment.comidarapidafindit.data.Ratings;
 import com.djdevelopment.comidarapidafindit.data.Restaurants;
-import com.djdevelopment.comidarapidafindit.lib.BottomSheetBehaviorGoogleMapsLike;
-import com.djdevelopment.comidarapidafindit.lib.MergedAppBarLayoutBehavior;
-import com.djdevelopment.comidarapidafindit.tools.ItemPagerAdapter;
 import com.djdevelopment.comidarapidafindit.tools.UtilUI;
 import com.google.android.gms.auth.api.Auth;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
@@ -87,7 +77,6 @@ import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
-import com.google.android.gms.nearby.messages.NearbyPermissions;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthCredential;
@@ -101,19 +90,13 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.mzelzoghbi.zgallery.ZGallery;
-import com.mzelzoghbi.zgallery.ZGrid;
 import com.mzelzoghbi.zgallery.entities.ZColor;
 import com.stfalcon.multiimageview.MultiImageView;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.text.CollationElementIterator;
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
@@ -156,19 +139,16 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     @BindView(R.id.ratingBarBottom) RatingBar ratingBarBottom;
     @BindView(R.id.floatingActionButton) FloatingActionButton floatingActionButton;
     @BindView(R.id.imageViewDescription) MultiImageView mThumbnailPreview;
-    @BindView(R.id.photosViewSlider) PhotosViewSlider photoViewSlider;
     @BindView(R.id.lblDelivery) TextView lblDelivery;
     @BindView(R.id.toolbar) Toolbar toolbar;
     @BindView(R.id.drawer_layout) DrawerLayout drawer;
     @BindView(R.id.imageViewBottomSheet) ImageView imageViewBottomSheet;
     @BindView(R.id.linearLayoutImageBottomSheet) LinearLayout linearLayoutImageBottomSheet;
     @BindView(R.id.textViewImageBottomSheet) TextView textViewImageBottomSheet;
-    TextView bottomSheetTextView;
-    MergedAppBarLayoutBehavior mergedAppBarLayoutBehavior;
-    ImageView imageView;
+    BottomSheetBehavior bottomSheetBehavior;
     RatingBar ratingBarAddComments;
-    EditText txtComments;
     NavigationView navigationView;
+    EditText txtComments;
     ActionBarDrawerToggle toggle;
 
     //Location configuration
@@ -194,7 +174,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     ArrayList<String> photosUrl = new ArrayList<>();
     ArrayList<String> commentsUsersImages = new ArrayList<>();
     UtilUI utilUI = new UtilUI();
-    int index = 0;
 
     @OnClick(R.id.btnRating)
     void submitButtonRating() {
@@ -311,10 +290,20 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     @OnClick(R.id.bottomSheet)
     void setBottomSheetBehavior(){
+        bottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
     }
 
     @OnClick(R.id.imageViewBottomSheet)
     void setImageViewBottomSheet(){
+        ZGallery.with(this, photosUrl)
+                .setToolbarTitleColor(ZColor.WHITE) // toolbar title color
+                .setGalleryBackgroundColor(ZColor.BLACK) // activity background color
+                .setToolbarColorResId(R.color.colorPrimary) // toolbar color
+                .show();
+    }
+
+    @OnClick(R.id.imageViewDescription)
+    void setImageViewDescription(){
         ZGallery.with(this, photosUrl)
                 .setToolbarTitleColor(ZColor.WHITE) // toolbar title color
                 .setGalleryBackgroundColor(ZColor.BLACK) // activity background color
@@ -327,12 +316,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
-
-        ActionBar actionBar = getSupportActionBar();
-        if (actionBar != null) {
-            actionBar.setDisplayHomeAsUpEnabled(true);
-            actionBar.setTitle(" ");
-        }
 
         setSupportActionBar(toolbar);
 
@@ -353,7 +336,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         StrictMode.setThreadPolicy(policy);
 
+        bottomSheetBehavior = BottomSheetBehavior.from(findViewById(R.id.bottomSheet));
+
         //Put BottomSheet Hidden when the app begin
+        bottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
         floatingActionButton.setVisibility(View.INVISIBLE);
 
         bottomSheetBehavior();
@@ -429,6 +415,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         mMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
             @Override
             public void onMapClick(LatLng latLng) {
+                bottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
                 try {
                     polyline.remove();
                 }
@@ -576,11 +563,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     @Override
     public void onLocationChanged(Location location) {
-
         //remove location callback:
         mLocationManager.removeUpdates(this);
-
-
     }
 
     @Override
@@ -601,8 +585,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             @Override
             public void onDataChange(final DataSnapshot dataSnapshot) {
 
+                int index = 0;
                 restaurants.clear();
-                index = 0;
                 for(final DataSnapshot dataSnapshotchild : dataSnapshot.getChildren()){
                     try {
 
@@ -630,15 +614,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                 public boolean onMarkerClick(Marker marker) {
                                     //TODO AGREGAR LOS DEMAS CAMPOS DEL RESTAURANTE
                                     markerSelected = Integer.parseInt(marker.getSnippet());
-                                    try {
-                                        ItemPagerAdapter adapter = new ItemPagerAdapter(MainActivity.this,photosUrl);
-                                        ViewPager viewPager = (ViewPager) findViewById(R.id.pager);
 
-                                        viewPager.setAdapter(adapter);
-                                    }
-                                    catch (Exception ex){ex.printStackTrace();}
-                                    mergedAppBarLayoutBehavior.setToolbarTitle(restaurants.get(markerSelected).getRestName());
-
+                                    bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
                                     txtBottomSheet.setText(restaurants.get(markerSelected).getRestName());
                                     getRatingList(markerSelected);
                                     if(restaurants.get(markerSelected).getDelivery()){
@@ -653,17 +630,17 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                     ratingBarBottom.setRating(rating);
                                     lblTelephone.setText(restaurants.get(markerSelected).getTelephones());
 
-                                    photoViewSlider.setVisibility(View.INVISIBLE);
+                                    loadRatingListToUI();
+
                                     if(restaurants.get(markerSelected).getUrlImage() == null){
                                         linearLayoutImageBottomSheet.setVisibility(View.INVISIBLE);
-                                        photoViewSlider.setVisibility(View.INVISIBLE);
                                     }
                                     else {
                                         try {
                                             mThumbnailPreview.clear();
                                             photosUrl.clear();
                                             linearLayoutImageBottomSheet.setVisibility(View.VISIBLE);
-                                            textViewImageBottomSheet.setText(restaurants.get(markerSelected).getUrlImage().size()+ " fotos");
+                                            textViewImageBottomSheet.setText(restaurants.get(markerSelected).getUrlImage().size()+ " foto/s");
                                             loadImageUI();
                                         } catch (Exception ex) {
                                             mThumbnailPreview.setImageBitmap(null);
@@ -672,7 +649,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                     }
                                     LatLng positionMarker = marker.getPosition();
                                     try {
-                                        GoogleDirection.withServerKey("AIzaSyAseOR6uttx9_AMO89pcG2WzaT-Bl6zMWA")
+                                        GoogleDirection.withServerKey(getString(R.string.google_direction_key))
                                                 .from(locationUser)
                                                 .to(positionMarker)
                                                 .transportMode(TransportMode.DRIVING)
@@ -717,52 +694,76 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     private void bottomSheetBehavior(){
-        CoordinatorLayout coordinatorLayout = (CoordinatorLayout) findViewById(R.id.coordinatorlayout);
-        View bottomSheet = coordinatorLayout.findViewById(R.id.bottom_sheet);
-        final BottomSheetBehaviorGoogleMapsLike behavior = BottomSheetBehaviorGoogleMapsLike.from(bottomSheet);
-        behavior.addBottomSheetCallback(new BottomSheetBehaviorGoogleMapsLike.BottomSheetCallback() {
+        bottomSheetBehavior.setBottomSheetCallback(new BottomSheetBehavior.BottomSheetCallback() {
             @Override
-            public void onStateChanged(@NonNull View bottomSheet, int newState) {
-                switch (newState) {
-                    case BottomSheetBehaviorGoogleMapsLike.STATE_COLLAPSED:
-                        Log.d("bottomsheet-", "STATE_COLLAPSED");
+            public void onStateChanged(@NonNull final View bottomSheet, int newState) {
+                Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+                switch (newState){
+                    case BottomSheetBehavior.STATE_DRAGGING:
+                        bottomSheet.setBackgroundColor(getResources().getColor(R.color.colorPrimary));
+                        relativeLayoutBottomSheet.setBackgroundColor(getResources().getColor(R.color.colorBlanco));
+                        mThumbnailPreview.setVisibility(View.VISIBLE);
+                        setSupportActionBar(toolbar);
+                        getSupportActionBar().setSubtitle(null);
+                        getSupportActionBar().setTitle(R.string.app_name);
                         break;
-                    case BottomSheetBehaviorGoogleMapsLike.STATE_DRAGGING:
-                        Log.d("bottomsheet-", "STATE_DRAGGING");
+                    case BottomSheetBehavior.STATE_EXPANDED:
+                        mThumbnailPreview.setVisibility(View.INVISIBLE);
+                        bottomSheet.setBackgroundColor(getResources().getColor(R.color.colorPrimary));
+                        relativeLayoutBottomSheet.setBackgroundColor(getResources().getColor(R.color.colorBlanco));
+                        getSupportActionBar().setTitle(restaurants.get(markerSelected).getRestName());
+                        getSupportActionBar().setSubtitle(String.valueOf(rating));
+                        toolbar.setNavigationIcon(getResources().getDrawable(R.drawable.ic_arrow_back_white));
+                        setSupportActionBar(toolbar);
+                        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+                        toolbar.setNavigationOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
+                                getSupportActionBar().setSubtitle(null);
+                            }
+                        });
+                        //TODO CHANGE FOR THE RESTAURANT TYPE
                         break;
-                    case BottomSheetBehaviorGoogleMapsLike.STATE_EXPANDED:
-                        Log.d("bottomsheet-", "STATE_EXPANDED");
+                    case BottomSheetBehavior.STATE_COLLAPSED:
+                        animateColor(Color.rgb(63,81,181), Color.rgb(255,255,255), 200);
+                        relativeLayoutBottomSheet.setBackgroundColor(Color.rgb(255,255,255));
+                        toggle.syncState();
+                        getSupportActionBar().setTitle(R.string.app_name);
+                        getSupportActionBar().setSubtitle(null);
+                        toolbar.setNavigationOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View view) {
+                                drawer.openDrawer(Gravity.START);
+                            }
+                        });
+                        if(restaurants.get(markerSelected).getUrlImage() != null){
+                            mThumbnailPreview.setVisibility(View.VISIBLE);
+                        }
+                        floatingActionButton.setVisibility(FloatingActionButton.VISIBLE);
                         break;
-                    case BottomSheetBehaviorGoogleMapsLike.STATE_ANCHOR_POINT:
-                        Log.d("bottomsheet-", "STATE_ANCHOR_POINT");
-                        break;
-                    case BottomSheetBehaviorGoogleMapsLike.STATE_HIDDEN:
-                        Log.d("bottomsheet-", "STATE_HIDDEN");
-                        break;
-                    default:
-                        Log.d("bottomsheet-", "STATE_SETTLING");
+                    case BottomSheetBehavior.STATE_HIDDEN:
+                        getSupportActionBar().setSubtitle(null);
+                        toggle.syncState();
+                        getSupportActionBar().setTitle(R.string.app_name);toolbar.setNavigationOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View view) {
+                                drawer.openDrawer(Gravity.START);
+                            }
+                        });
+
+                        mThumbnailPreview.setVisibility(View.INVISIBLE);
+                        floatingActionButton.setVisibility(FloatingActionButton.INVISIBLE);
                         break;
                 }
+
             }
 
             @Override
             public void onSlide(@NonNull View bottomSheet, float slideOffset) {
+
             }
         });
-
-        AppBarLayout mergedAppBarLayout = (AppBarLayout) findViewById(R.id.merged_appbarlayout);
-        mergedAppBarLayoutBehavior = MergedAppBarLayoutBehavior.from(mergedAppBarLayout);
-        mergedAppBarLayoutBehavior.setToolbarTitle("Tittle");
-        mergedAppBarLayoutBehavior.setNavigationOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                behavior.setState(BottomSheetBehaviorGoogleMapsLike.STATE_COLLAPSED);
-            }
-        });
-
-
-
-        behavior.setState(BottomSheetBehaviorGoogleMapsLike.STATE_ANCHOR_POINT);
     }
 
     private Location getLastKnownLocation() {
@@ -874,6 +875,47 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
     }
 
+    public void loadRatingListToUI(){
+        try {
+
+            if(ratingsList.size() != 0){
+                ratingsList.clear();
+            }
+            for (String restRating : restaurants.get(markerSelected).getRating().values()) {
+                try {
+
+                    JSONObject jObj = new JSONObject(restRating);
+                    Ratings ratings = new Ratings();
+                    ratings.setRating(Float.parseFloat(jObj.getString("rating")));
+                    ratings.setComment(jObj.getString("comment"));
+                    ratings.setUserName(jObj.getString("userName"));
+                    ratings.setPhotoURL(jObj.getString("photoURL"));
+                    ratings.setFecha(jObj.getString("fecha"));
+                    ratingsList.add(ratings);
+
+                } catch (JSONException e) {
+                    Log.e("MYAPP", "unexpected JSON exception", e);
+                }
+            }
+
+            Collections.sort(ratingsList, new Comparator<Ratings>() {
+                @Override
+                public int compare(Ratings ratings1, Ratings ratings2) {
+                    return ((new Date(Long.parseLong(ratings1.getFecha())).getTime() >= new Date(Long.parseLong(ratings2.getFecha())).getTime()) ? -1 : 0);
+                }
+            });
+            RecyclerView rvContacts = (RecyclerView) findViewById(R.id.rvRating);
+
+            RatingAdapter adapter = new RatingAdapter(MainActivity.this, ratingsList);
+            rvContacts.setAdapter(adapter);
+            rvContacts.setLayoutManager(new LinearLayoutManager(MainActivity.this));
+        }
+        catch (Exception ex){
+            ex.printStackTrace();
+        }
+
+    }
+
     private void updateUIFromUser(){
         user = FirebaseAuth.getInstance().getCurrentUser();
 
@@ -899,7 +941,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                     Log.e("MYAPP", "unexpected JSON exception", e);
                                 }
                             }
-                            photoViewSlider.setVisibility(View.VISIBLE);
+                            mThumbnailPreview.addImage(utilUI.getBitmapFromURL(photosUrl.get(0)));
                             imageViewBottomSheet.setImageBitmap(utilUI.getBitmapFromURL(photosUrl.get(0)));
                         }
                         catch (Exception ex){
