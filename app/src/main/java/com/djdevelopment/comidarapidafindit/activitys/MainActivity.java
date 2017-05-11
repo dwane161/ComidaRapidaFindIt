@@ -18,6 +18,7 @@ import android.location.LocationManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.StrictMode;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
@@ -110,6 +111,8 @@ import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -189,6 +192,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     ArrayList<String> photosUrl = new ArrayList<>();
     ArrayList<String> commentsUsersImages = new ArrayList<>();
     UtilUI utilUI = new UtilUI();
+    String mCurrentPhotoPath;
     LatLng positionMarker;
 
     @SuppressWarnings("ALL")
@@ -380,8 +384,22 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     @OnClick(R.id.addNewImage)
     void addNewImageToFirebase(){
-        Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-        startActivityForResult(intent, CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE);
+        Intent cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        if (cameraIntent.resolveActivity(getPackageManager()) != null) {
+            // Create the File where the photo should go
+            File photoFile = null;
+            try {
+                photoFile = createImageFile();
+            } catch (IOException ex) {
+                // Error occurred while creating the File
+                ex.printStackTrace();
+            }
+            // Continue only if the File was successfully created
+            if (photoFile != null) {
+                cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(photoFile));
+                startActivityForResult(cameraIntent,CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE);
+            }
+        }
     }
 
     @OnClick(R.id.btnShareRest)
@@ -562,8 +580,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
 
         if(requestCode == CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE) {
-
-            Bitmap urlImage = (Bitmap) data.getExtras().get("data");
+            Bitmap urlImage = null;
+            try{
+            urlImage = MediaStore.Images.Media.getBitmap(this.getContentResolver(), Uri.parse(mCurrentPhotoPath));
+            }
+            catch (IOException e) {
+                e.printStackTrace();
+            }
             final Uri tempUri = getImageUri(getApplicationContext(), urlImage);
 
             StorageReference storageRef = FirebaseStorage.getInstance().getReferenceFromUrl("gs://comidarapida-cae88.appspot.com/");
@@ -1129,6 +1152,23 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         String longitud = words[1].replace(")", "");
         LatLng latLng = new LatLng(Double.parseDouble(latitud), Double.parseDouble(longitud));
         return latLng;
+    }
+
+    private File createImageFile() throws IOException {
+        // Create an image file name
+        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+        String imageFileName = "JPEG_" + timeStamp + "_";
+        File storageDir = Environment.getExternalStoragePublicDirectory(
+                Environment.DIRECTORY_PICTURES);
+        File image = File.createTempFile(
+                imageFileName,  // prefix
+                ".jpg",         // suffix
+                storageDir      // directory
+        );
+
+        // Save a file: path for use with ACTION_VIEW intents
+        mCurrentPhotoPath = "file:" + image.getAbsolutePath();
+        return image;
     }
 
     public float getRatingList(Restaurants restaurants){
