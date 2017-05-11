@@ -7,6 +7,7 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -18,6 +19,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.StrictMode;
+import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomSheetBehavior;
 import android.support.design.widget.FloatingActionButton;
@@ -33,12 +35,12 @@ import android.support.v7.widget.AppCompatDrawableManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.text.Html;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -58,15 +60,19 @@ import com.akexorcist.googledirection.model.Leg;
 import com.akexorcist.googledirection.model.Route;
 import com.akexorcist.googledirection.util.DirectionConverter;
 import com.djdevelopment.comidarapidafindit.R;
+import com.djdevelopment.comidarapidafindit.data.Image;
 import com.djdevelopment.comidarapidafindit.data.Ratings;
 import com.djdevelopment.comidarapidafindit.data.Restaurants;
+import com.djdevelopment.comidarapidafindit.tools.DownloadImageTask;
 import com.djdevelopment.comidarapidafindit.tools.UtilUI;
+import com.djdevelopment.comidarapidafindit.tools.ValuedPlacesAdapter;
 import com.google.android.gms.auth.api.Auth;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.auth.api.signin.GoogleSignInResult;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -78,6 +84,8 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthCredential;
 import com.google.firebase.auth.AuthResult;
@@ -89,23 +97,29 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.OnProgressListener;
+import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
 import com.mzelzoghbi.zgallery.ZGallery;
-import com.mzelzoghbi.zgallery.entities.ZColor;
+import com.mzelzoghbi.zgallery.ZGrid;
 import com.stfalcon.multiimageview.MultiImageView;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
+import java.util.Queue;
 
-import br.com.jeancsanchez.photoviewslider.PhotosViewSlider;
 import butterknife.BindView;
-import butterknife.ButterKnife;
 import butterknife.OnClick;
+import butterknife.ButterKnife;
 
 import com.djdevelopment.comidarapidafindit.tools.RatingAdapter;
 
@@ -115,6 +129,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     //Permisions
     private static final int TAG_CODE_PERMISSION_LOCATION = 0;
     private static final int RC_SIGN_IN = 5;
+    private int CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE = 10;
 
     //Map configurantion
     private GoogleMap mMap;
@@ -143,8 +158,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     @BindView(R.id.toolbar) Toolbar toolbar;
     @BindView(R.id.drawer_layout) DrawerLayout drawer;
     @BindView(R.id.imageViewBottomSheet) ImageView imageViewBottomSheet;
-    @BindView(R.id.linearLayoutImageBottomSheet) LinearLayout linearLayoutImageBottomSheet;
     @BindView(R.id.textViewImageBottomSheet) TextView textViewImageBottomSheet;
+    @BindView(R.id.relativeLayoutImageBottomSheet) RelativeLayout relativeLayoutImageBottomSheet;
     BottomSheetBehavior bottomSheetBehavior;
     RatingBar ratingBarAddComments;
     NavigationView navigationView;
@@ -174,7 +189,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     ArrayList<String> photosUrl = new ArrayList<>();
     ArrayList<String> commentsUsersImages = new ArrayList<>();
     UtilUI utilUI = new UtilUI();
+    LatLng positionMarker;
 
+    @SuppressWarnings("ALL")
     @OnClick(R.id.btnRating)
     void submitButtonRating() {
         new MaterialDialog.Builder(MainActivity.this)
@@ -192,6 +209,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                             String str = txtComments.getText().toString();
 
                             myRef.child(keys.get(markerSelected)).child("rating").push().setValue("{ \"rating\" : \""+rating+"\", \"comment\" : \""+str+"\", \"userName\" : \""+user.getDisplayName()+"\", \"photoURL\" : \""+user.getPhotoUrl()+"\" , \"fecha\" : \""+new Date().getTime()+"\"}");
+                        }
+                        catch (NullPointerException ex){
+                            ex.printStackTrace();
                         }
                         catch (Exception ex){
                             ex.printStackTrace();
@@ -268,9 +288,57 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             });
             RecyclerView rvContacts = (RecyclerView) dialog.getView().findViewById(R.id.rvRating);
 
-            RatingAdapter adapter = new RatingAdapter(MainActivity.this, ratingsList);
+            RatingAdapter adapter = new RatingAdapter(MainActivity.this, ratingsList, true);
             rvContacts.setAdapter(adapter);
             rvContacts.setLayoutManager(new LinearLayoutManager(MainActivity.this));
+        }
+        catch (Exception ex){
+            ex.printStackTrace();
+        }
+    }
+
+    @OnClick(R.id.btnShowAllRatings)
+    void setBtnShowAllRatings(){
+        try {
+
+            MaterialDialog dialog = new MaterialDialog.Builder(MainActivity.this)
+                    .title("Lista de ratings")
+                    .customView(R.layout.layout_show_rating, true)
+                    .show();
+
+            if(ratingsList.size() != 0){
+                ratingsList.clear();
+            }
+            for (String restRating : restaurants.get(markerSelected).getRating().values()) {
+                try {
+
+                    JSONObject jObj = new JSONObject(restRating);
+                    Ratings ratings = new Ratings();
+                    ratings.setRating(Float.parseFloat(jObj.getString("rating")));
+                    ratings.setComment(jObj.getString("comment"));
+                    ratings.setUserName(jObj.getString("userName"));
+                    ratings.setPhotoURL(jObj.getString("photoURL"));
+                    ratings.setFecha(jObj.getString("fecha"));
+                    ratingsList.add(ratings);
+
+                } catch (JSONException e) {
+                    Log.e("MYAPP", "unexpected JSON exception", e);
+                }
+            }
+
+            Collections.sort(ratingsList, new Comparator<Ratings>() {
+                @Override
+                public int compare(Ratings ratings1, Ratings ratings2) {
+                    return ((new Date(Long.parseLong(ratings1.getFecha())).getTime() >= new Date(Long.parseLong(ratings2.getFecha())).getTime()) ? -1 : 0);
+                }
+            });
+
+            RecyclerView rvContacts = (RecyclerView) dialog.getView().findViewById(R.id.rvRating);
+
+            RatingAdapter adapter = new RatingAdapter(MainActivity.this, ratingsList, true);
+            rvContacts.setAdapter(adapter);
+            rvContacts.setLayoutManager(new LinearLayoutManager(MainActivity.this));
+
         }
         catch (Exception ex){
             ex.printStackTrace();
@@ -296,19 +364,32 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     @OnClick(R.id.imageViewBottomSheet)
     void setImageViewBottomSheet(){
         ZGallery.with(this, photosUrl)
-                .setToolbarTitleColor(ZColor.WHITE) // toolbar title color
-                .setGalleryBackgroundColor(ZColor.BLACK) // activity background color
                 .setToolbarColorResId(R.color.colorPrimary) // toolbar color
                 .show();
     }
 
     @OnClick(R.id.imageViewDescription)
     void setImageViewDescription(){
-        ZGallery.with(this, photosUrl)
-                .setToolbarTitleColor(ZColor.WHITE) // toolbar title color
-                .setGalleryBackgroundColor(ZColor.BLACK) // activity background color
+        ZGrid.with(this, photosUrl)
                 .setToolbarColorResId(R.color.colorPrimary) // toolbar color
+                .setTitle(getString(R.string.app_name)) // toolbar title
+                .setSpanCount(3) // colums count
+                .setGridImgPlaceHolder(R.color.colorPrimary) // color placeholder for the grid image until it loads
                 .show();
+    }
+
+    @OnClick(R.id.addNewImage)
+    void addNewImageToFirebase(){
+        Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        startActivityForResult(intent, CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE);
+    }
+
+    @OnClick(R.id.btnShareRest)
+    void shareRest(){
+        Intent intent = new Intent(Intent.ACTION_SEND);
+        intent.setType("text/plain");
+        intent.putExtra(Intent.EXTRA_TEXT,"Visita \""+restaurants.get(markerSelected).getRestName()+"\". Ubicado en:"+ "http://maps.google.com/maps?q=loc:"+String.format("%f,%f", positionMarker.latitude, positionMarker.longitude ) );
+        startActivity(Intent.createChooser(intent, "Compartir sitio con:"));
     }
 
     @Override
@@ -479,6 +560,34 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 firebaseAuthWithGoogle(account);
             }
         }
+
+        if(requestCode == CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE) {
+
+            Bitmap urlImage = (Bitmap) data.getExtras().get("data");
+            final Uri tempUri = getImageUri(getApplicationContext(), urlImage);
+
+            StorageReference storageRef = FirebaseStorage.getInstance().getReferenceFromUrl("gs://comidarapida-cae88.appspot.com/");
+            final String key = keys.get(markerSelected);
+            StorageReference spaceRef = storageRef.child("images/"+key +"/"+tempUri.getLastPathSegment());
+
+            UploadTask uploadTask = spaceRef.putFile(tempUri);
+
+            uploadTask.addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                @Override
+                public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                    myRef.child(key).child("urlImage").push().setValue("{\"url\": \"" + taskSnapshot.getDownloadUrl().toString() + "\"}");
+                }
+            }).addOnFailureListener(new OnFailureListener() {
+                @Override
+                public void onFailure(@NonNull Exception e) {
+                    e.printStackTrace();
+                }
+            }).addOnProgressListener(new OnProgressListener<UploadTask.TaskSnapshot>() {
+                @Override
+                public void onProgress(UploadTask.TaskSnapshot taskSnapshot) {
+                }
+            });
+        }
     }
 
     @Override
@@ -520,14 +629,50 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         int id = item.getItemId();
 
         if (id == R.id.nav_camera) {
-            // Handle the camera action
+
         } else if (id == R.id.nav_gallery) {
 
             Intent intent = new Intent(this, SuggestActivity.class);
             startActivity(intent);
 
         } else if (id == R.id.nav_slideshow) {
+            final MaterialDialog dialog = new MaterialDialog.Builder(MainActivity.this)
+                    .title("Rating")
+                    .customView(R.layout.layout_show_valued_places,false)
+                    .positiveText("Aceptar")
+                    .onPositive(new MaterialDialog.SingleButtonCallback() {
+                        @Override
+                        public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+                            try {
 
+                            }
+                            catch (NullPointerException ex){
+                                ex.printStackTrace();
+                            }
+                            catch (Exception ex){
+                                ex.printStackTrace();
+                            }
+                        }
+                    })
+                    .show();
+            RecyclerView rvValuedPlaces = (RecyclerView) dialog.getView().findViewById(R.id.rvValuedPlaces);
+
+            Collections.sort(this.restaurants, new Comparator<Restaurants>() {
+                @Override
+                public int compare(Restaurants restaurants1, Restaurants restaurants2) {
+                    return (getRatingList(restaurants1) >= getRatingList(restaurants2)) ? -1 : 0;
+                }
+            });
+            ValuedPlacesAdapter adapter = new ValuedPlacesAdapter(restaurants, new ValuedPlacesAdapter.OnItemClickLister() {
+                @Override
+                public void OnItemClick(Restaurants name, int position) {
+                    mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(convertStringToLatLng(name.getLatLong()),20));
+                    retrieveDataFromFirebase();
+                    dialog.dismiss();
+                }
+            });
+            rvValuedPlaces.setAdapter(adapter);
+            rvValuedPlaces.setLayoutManager(new LinearLayoutManager(MainActivity.this));
         } else if (id == R.id.nav_manage) {
 
         } else if (id == R.id.nav_share) {
@@ -614,7 +759,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                 public boolean onMarkerClick(Marker marker) {
                                     //TODO AGREGAR LOS DEMAS CAMPOS DEL RESTAURANTE
                                     markerSelected = Integer.parseInt(marker.getSnippet());
-
                                     bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
                                     txtBottomSheet.setText(restaurants.get(markerSelected).getRestName());
                                     getRatingList(markerSelected);
@@ -626,20 +770,30 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                     }
 
                                     txtRating.setText(String.valueOf(rating));
-                                    txtCreditCards.setText(restaurants.get(markerSelected).getCreditCards());
+                                    if(restaurants.get(markerSelected).getCreditCards().equals("")){
+                                        txtCreditCards.setText("No se acepta tarjetas de credito");
+                                    }
+                                    else {
+                                        txtCreditCards.setText(restaurants.get(markerSelected).getCreditCards());
+                                    }
                                     ratingBarBottom.setRating(rating);
-                                    lblTelephone.setText(restaurants.get(markerSelected).getTelephones());
-
+                                    if(restaurants.get(markerSelected).getTelephones().equals("")){
+                                        lblTelephone.setText("No existen telefonos registrados");
+                                    }
+                                    else {
+                                        lblTelephone.setText(restaurants.get(markerSelected).getTelephones());
+                                    }
                                     loadRatingListToUI();
 
                                     if(restaurants.get(markerSelected).getUrlImage() == null){
-                                        linearLayoutImageBottomSheet.setVisibility(View.INVISIBLE);
+                                        mThumbnailPreview.clear();
+                                        imageViewBottomSheet.setImageBitmap(null);
+                                        textViewImageBottomSheet.setText(R.string.image_not_storage);
                                     }
                                     else {
                                         try {
                                             mThumbnailPreview.clear();
                                             photosUrl.clear();
-                                            linearLayoutImageBottomSheet.setVisibility(View.VISIBLE);
                                             textViewImageBottomSheet.setText(restaurants.get(markerSelected).getUrlImage().size()+ " foto/s");
                                             loadImageUI();
                                         } catch (Exception ex) {
@@ -647,7 +801,21 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                             ex.printStackTrace();
                                         }
                                     }
-                                    LatLng positionMarker = marker.getPosition();
+                                    positionMarker = marker.getPosition();
+                                    /*
+                                    Location locationA = new Location("point A");
+
+                                    locationA.setLatitude(locationUser.latitude);
+                                    locationA.setLongitude(locationUser.longitude);
+
+                                    Location locationB = new Location("point B");
+
+                                    locationB.setLatitude(positionMarker.latitude);
+                                    locationB.setLongitude(positionMarker.longitude);
+
+                                    float distance = locationA.distanceTo(locationB);
+                                    System.out.print(distance);
+                                    */
                                     try {
                                         GoogleDirection.withServerKey(getString(R.string.google_direction_key))
                                                 .from(locationUser)
@@ -693,6 +861,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     }
 
+    @SuppressWarnings("ALL")
     private void bottomSheetBehavior(){
         bottomSheetBehavior.setBottomSheetCallback(new BottomSheetBehavior.BottomSheetCallback() {
             @Override
@@ -700,12 +869,17 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
                 switch (newState){
                     case BottomSheetBehavior.STATE_DRAGGING:
-                        bottomSheet.setBackgroundColor(getResources().getColor(R.color.colorPrimary));
-                        relativeLayoutBottomSheet.setBackgroundColor(getResources().getColor(R.color.colorBlanco));
-                        mThumbnailPreview.setVisibility(View.VISIBLE);
-                        setSupportActionBar(toolbar);
-                        getSupportActionBar().setSubtitle(null);
-                        getSupportActionBar().setTitle(R.string.app_name);
+                        try {
+                            bottomSheet.setBackgroundColor(getResources().getColor(R.color.colorPrimary));
+                            relativeLayoutBottomSheet.setBackgroundColor(getResources().getColor(R.color.colorBlanco));
+                            mThumbnailPreview.setVisibility(View.VISIBLE);
+                            setSupportActionBar(toolbar);
+                            getSupportActionBar().setSubtitle(null);
+                            getSupportActionBar().setTitle(R.string.app_name);
+                        }
+                        catch (NullPointerException ex){
+                            ex.printStackTrace();
+                        }
                         break;
                     case BottomSheetBehavior.STATE_EXPANDED:
                         mThumbnailPreview.setVisibility(View.INVISIBLE);
@@ -726,7 +900,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         //TODO CHANGE FOR THE RESTAURANT TYPE
                         break;
                     case BottomSheetBehavior.STATE_COLLAPSED:
-                        animateColor(Color.rgb(63,81,181), Color.rgb(255,255,255), 200);
+                        animateColor(Color.rgb(63,81,181), Color.rgb(255,255,255));
                         relativeLayoutBottomSheet.setBackgroundColor(Color.rgb(255,255,255));
                         toggle.syncState();
                         getSupportActionBar().setTitle(R.string.app_name);
@@ -790,9 +964,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         return bestLocation;
     }
 
-    private void animateColor(int colorFrom, int colorTo, int duration){
+    private void animateColor(int colorFrom, int colorTo){
         ValueAnimator colorAnimation = ValueAnimator.ofObject(new ArgbEvaluator(), colorFrom, colorTo);
-        colorAnimation.setDuration(duration); // milliseconds
+        colorAnimation.setDuration(200); // milliseconds
         colorAnimation.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
 
             @Override
@@ -851,7 +1025,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             for (String restRating : restaurants.get(markerSelected).getRating().values()) {
                 try {
                     JSONObject jObj = new JSONObject(restRating);
-                    String var = jObj.getString("rating");
                     ratingList.add(jObj.getString("rating"));
                 } catch (JSONException e) {
                     Log.e("MYAPP", "unexpected JSON exception", e);
@@ -906,7 +1079,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             });
             RecyclerView rvContacts = (RecyclerView) findViewById(R.id.rvRating);
 
-            RatingAdapter adapter = new RatingAdapter(MainActivity.this, ratingsList);
+            RatingAdapter adapter = new RatingAdapter(MainActivity.this, ratingsList, false);
             rvContacts.setAdapter(adapter);
             rvContacts.setLayoutManager(new LinearLayoutManager(MainActivity.this));
         }
@@ -916,6 +1089,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     }
 
+    @SuppressWarnings("ALL")
     private void updateUIFromUser(){
         user = FirebaseAuth.getInstance().getCurrentUser();
 
@@ -925,32 +1099,66 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     private void loadImageUI(){
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        try {
-                            for (String key : restaurants.get(markerSelected).getUrlImage().keySet()) {
-                                try {
-                                    JSONObject jObj = new JSONObject(restaurants.get(markerSelected).getUrlImage().get(key));
-                                    commentsUsersImages.add(jObj.getString("name"));
-                                    photosUrl.add(jObj.getString("url"));
-                                } catch (JSONException e) {
-                                    Log.e("MYAPP", "unexpected JSON exception", e);
-                                }
-                            }
-                            mThumbnailPreview.addImage(utilUI.getBitmapFromURL(photosUrl.get(0)));
-                            imageViewBottomSheet.setImageBitmap(utilUI.getBitmapFromURL(photosUrl.get(0)));
-                        }
-                        catch (Exception ex){
-                            ex.printStackTrace();
-                        }
-                    }
-                });
+        try {
+            for (String key : restaurants.get(markerSelected).getUrlImage().keySet()) {
+                try {
+                    JSONObject jObj = new JSONObject(restaurants.get(markerSelected).getUrlImage().get(key));
+                    photosUrl.add(jObj.getString("url"));
+                } catch (JSONException e) {
+                    Log.e("MYAPP", "unexpected JSON exception", e);
+                }
             }
-        }).start();
+            new DownloadImageTask(mThumbnailPreview).execute(photosUrl.get(0));
+            new DownloadImageTask(imageViewBottomSheet).execute(photosUrl.get(0));
+        }
+        catch (Exception ex){
+            ex.printStackTrace();
+        }
+    }
+
+    public Uri getImageUri(Context inContext, Bitmap inImage) {
+        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+        inImage.compress(Bitmap.CompressFormat.JPEG, 100, bytes);
+        String path = MediaStore.Images.Media.insertImage(inContext.getContentResolver(), inImage, "Title", null);
+        return Uri.parse(path);
+    }
+
+    public LatLng convertStringToLatLng(String latLong){
+        String[] words = latLong.split(",");
+        String latitud = words[0].substring(10);
+        String longitud = words[1].replace(")", "");
+        LatLng latLng = new LatLng(Double.parseDouble(latitud), Double.parseDouble(longitud));
+        return latLng;
+    }
+
+    public float getRatingList(Restaurants restaurants){
+        try {
+            if (ratingList.size() != 0) {
+                ratingList.clear();
+            }
+            for (String restRating : restaurants.getRating().values()) {
+                try {
+                    JSONObject jObj = new JSONObject(restRating);
+                    ratingList.add(jObj.getString("rating"));
+                } catch (JSONException e) {
+                    Log.e("MYAPP", "unexpected JSON exception", e);
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+            }
+            int i;
+            for (i = 0; i < ratingList.size(); i++) {
+                rating = Float.parseFloat(ratingList.get(i)) + rating;
+
+            }
+            rating = rating / i;
+
+            return rating = Math.round(rating * 100.0f) / 100.0f;
+        }
+        catch (Exception ex){
+            ex.printStackTrace();
+            return 0;
+        }
     }
 
 }

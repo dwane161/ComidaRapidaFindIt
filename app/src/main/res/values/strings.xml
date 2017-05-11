@@ -167,6 +167,7 @@
     <string name="menu_not_available">No menu disponible actualmente</string>
     <string name="share_app">Desgarga la app</string>
     <string name="google_direction_key">AIzaSyAseOR6uttx9_AMO89pcG2WzaT-Bl6zMWA</string>
+    <string name="image_not_storage">No existen imagenes registradas, sé el primero en colaborar</string>
 
 
 </resources>

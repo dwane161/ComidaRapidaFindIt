@@ -1,7 +1,5 @@
 package com.djdevelopment.comidarapidafindit.data;
 
-import android.support.annotation.NonNull;
-
 import java.util.Comparator;
 import java.util.Date;
 

@@ -123,7 +123,6 @@ public class SuggestActivity extends AppCompatActivity{
                 //Nombre de restaurante
                 String restName;
                 String creditCars;
-                double countStars;
                 String telephonesArray;
 
                 FirebaseDatabase database = FirebaseDatabase.getInstance();
@@ -156,9 +155,6 @@ public class SuggestActivity extends AppCompatActivity{
                     creditCars = TextUtils.join(", ", creditCards.toArray());
                     telephonesArray = TextUtils.join(", ", telephones.toArray());
 
-                    //Rating de restaurante
-                    countStars = 0.00;
-
                     Restaurants restaurants = new Restaurants(restName, resMenuArray, LatLngCoord, creditCars, telephonesArray, false, null, null,toogleDelivery.isChecked());
 
                     key = myRef.push().getKey();
@@ -175,7 +171,7 @@ public class SuggestActivity extends AppCompatActivity{
                         uploadTask.addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
                             @Override
                             public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                                myRef.child("restaurants-suggest").child(key).child("urlImage").push().setValue("{\"name\": \"" + images.getDescription() +"\" , \"url\": \"" + taskSnapshot.getDownloadUrl().toString() + "\"}");
+                                myRef.child("restaurants-suggest").child(key).child("urlImage").push().setValue("{ \"url\": \"" + taskSnapshot.getDownloadUrl().toString() + "\"}");
                             }
                         }).addOnFailureListener(new OnFailureListener() {
                             @Override
@@ -429,11 +425,8 @@ public class SuggestActivity extends AppCompatActivity{
                 }
 
 
-                intent.setType("image/*");//image/jpeg
-                //intent.setAction(Intent.ACTION_GET_CONTENT);
-                //intent.addCategory(Intent.CATEGORY_OPENABLE);
+                intent.setType("image/*");
                 if (android.os.Build.VERSION.SDK_INT>=android.os.Build.VERSION_CODES.HONEYCOMB) {
-                    //for API Level 11+
                     intent.putExtra(Intent.EXTRA_LOCAL_ONLY, true);
                 }else{
                     intent.putExtra("android.intent.extra.LOCAL_ONLY", true);
@@ -501,7 +494,7 @@ public class SuggestActivity extends AppCompatActivity{
         }
     }
 
-    protected void showInputDialogAndAddElement(final Intent data) {
+    public void showInputDialogAndAddElement(final Intent data) {
 
         // get prompts.xml view
         LayoutInflater layoutInflater = LayoutInflater.from(context);

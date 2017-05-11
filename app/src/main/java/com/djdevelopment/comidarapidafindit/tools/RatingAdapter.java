@@ -13,7 +13,6 @@ import android.widget.TextView;
 import com.djdevelopment.comidarapidafindit.R;
 import com.djdevelopment.comidarapidafindit.data.Ratings;
 
-import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
@@ -24,19 +23,20 @@ import java.util.List;
 
 public class RatingAdapter extends RecyclerView.Adapter<RatingAdapter.ViewHolder> {
 
-    private List<Ratings> mRatings;
-    private Context mContext;
-    UtilUI utilUI = new UtilUI();
+    private List<Ratings> ratings;
+    private Context context;
+    private boolean isShowMore;
 
     // Pass in the contact array into the constructor
-    public RatingAdapter(Context context, List<Ratings> ratings) {
-        mRatings = ratings;
-        mContext = context;
+    public RatingAdapter(Context context, List<Ratings> ratings, boolean isShowMore) {
+        this.ratings = ratings;
+        this.context = context;
+        this.isShowMore = isShowMore;
     }
 
     // Easy access to the context object in the recyclerview
     private Context getContext() {
-        return mContext;
+        return context;
     }
 
     @Override
@@ -46,40 +46,54 @@ public class RatingAdapter extends RecyclerView.Adapter<RatingAdapter.ViewHolder
         View ratingView = LayoutInflater.from(parent.getContext()).inflate(R.layout.layout_rating_detail, parent, false);
 
         // Return a new holder instance
-        ViewHolder viewHolder = new ViewHolder(ratingView);
-        return viewHolder;
+        return new ViewHolder(ratingView);
     }
 
     @Override
     public void onBindViewHolder(RatingAdapter.ViewHolder holder, int position) {
-        Ratings rating = mRatings.get(position);
-        View view = holder.itemView;
-        TextView nombreUsuarioRating = (TextView) view.findViewById(R.id.nombreUsuarioRating);
-        RatingBar ratingBarRating = (RatingBar) view.findViewById(R.id.ratingBarRating);
-        TextView commentRating = (TextView) view.findViewById(R.id.commentRating);
-        ImageView imageViewRating = (ImageView) view.findViewById(R.id.imageViewRating);
-        TextView fechaRating = (TextView) view.findViewById(R.id.fechaRating);
-
-        Date date=new Date(Long.parseLong(rating.getFecha()));
-        SimpleDateFormat df2 = new SimpleDateFormat("dd/MM/yy HH:mm:ss");
-        String dateText = df2.format(date);
-
-        nombreUsuarioRating.setText(rating.getUserName());
-        ratingBarRating.setRating(rating.getRating());
-        imageViewRating.setImageBitmap(utilUI.getBitmapFromURL(rating.getPhotoURL()));
-        fechaRating.setText(dateText);
-        commentRating.setText(rating.getComment());
+        holder.bindView(ratings.get(position));
     }
 
     @Override
     public int getItemCount() {
-       return (mRatings.size()>=4) ? 4 :mRatings.size();
+        if(ratings.size()>=4 && !isShowMore){
+            return 4;
+        }
+        else if(ratings.size()>=4 && isShowMore){
+            return ratings.size();
+        }
+        else{
+            return ratings.size();
+        }
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
+        TextView nombreUsuarioRating;
+        RatingBar ratingBarRating;
+        TextView commentRating;
+        ImageView imageViewRating;
+        TextView fechaRating;
+        UtilUI utilUI = new UtilUI();
 
         public ViewHolder(View itemView) {
             super(itemView);
+            this.nombreUsuarioRating = (TextView) itemView.findViewById(R.id.nombreUsuarioRating);
+            this.ratingBarRating = (RatingBar) itemView.findViewById(R.id.ratingBarRating);
+            this.commentRating = (TextView) itemView.findViewById(R.id.commentRating);
+            this.imageViewRating = (ImageView) itemView.findViewById(R.id.imageViewRating);
+            this.fechaRating = (TextView) itemView.findViewById(R.id.fechaRating);
+        }
+        public void bindView(Ratings ratings){
+
+            Date date=new Date(Long.parseLong(ratings.getFecha()));
+            SimpleDateFormat df2 = new SimpleDateFormat("dd/MM/yy HH:mm:ss");
+            String dateText = df2.format(date);
+
+            nombreUsuarioRating.setText(ratings.getUserName());
+            ratingBarRating.setRating(ratings.getRating());
+            imageViewRating.setImageBitmap(utilUI.getBitmapFromURL(ratings.getPhotoURL()));
+            fechaRating.setText(dateText);
+            commentRating.setText(ratings.getComment());
         }
     }
 }

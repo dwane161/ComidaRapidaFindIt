@@ -95,9 +95,10 @@
                 <Button
                     android:layout_width="match_parent"
                     android:background="@drawable/selector_xml_name"
-                    android:drawableTop="@drawable/ic_bowseinternet"
+                    android:drawableTop="@drawable/ic_share"
+                    android:id="@+id/btnShareRest"
                     android:textAlignment="center"
-                    android:text="Sitio web"
+                    android:text="Compartir"
                     android:layout_gravity="center"
                     android:gravity="left|center_vertical"
                     android:layout_height="wrap_content"/>
@@ -116,7 +117,7 @@
                     android:background="@drawable/selector_xml_name"
                     android:drawableTop="@drawable/ic_star"
                     android:textAlignment="center"
-                    android:text="Rating"
+                    android:text="Dar Rating"
                     android:layout_gravity="center"
                     android:gravity="left|center_vertical"
                     android:layout_height="wrap_content"/>
@@ -193,7 +194,7 @@
                         android:layout_height="wrap_content"
                         android:layout_below="@id/linearLayout"
                         android:paddingLeft="10dp"
-                        android:text="TextView de prueba" />
+                        android:text="Horario no disponible" />
                 </LinearLayout>
 
                 <LinearLayout
@@ -301,6 +302,7 @@
                     android:layout_below="@+id/linearLayoutDelivery">
                     <RelativeLayout
                         android:layout_width="match_parent"
+                        android:id="@+id/relativeLayoutImageBottomSheet"
                         android:layout_height="80dp">
                         <ImageView
                             android:id="@+id/imageViewBottomSheet"
@@ -317,6 +319,7 @@
                             android:layout_alignRight="@+id/imageViewBottomSheet"
                             android:layout_alignBottom="@+id/imageViewBottomSheet"
                             android:layout_margin="1dp"
+                            android:text="@string/image_not_storage"
                             android:gravity="bottom"
                             android:textColor="#000000" />
                     </RelativeLayout>
@@ -327,6 +330,7 @@
                     <Button
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
+                        android:id="@+id/addNewImage"
                         android:background="@drawable/selector_xml_name"
                         android:drawableLeft="@drawable/ic_image_add_button"
                         android:layout_gravity="start"
@@ -353,12 +357,11 @@
                         android:layout_marginLeft="@dimen/activity_horizontal_margin"
                         android:layout_marginTop="20dp"
                         android:layout_marginBottom="20dp"/>
-
                     <android.support.v7.widget.RecyclerView
                         android:id="@+id/rvRating"
                         android:layout_width="match_parent"
+                        android:nestedScrollingEnabled="false"
                         android:layout_height="wrap_content" />
-
                 </LinearLayout>
 
                 <LinearLayout
@@ -369,6 +372,7 @@
                     <Button
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
+                        android:id="@+id/btnShowAllRatings"
                         android:background="@drawable/selector_xml_name"
                         android:textAlignment="textStart"
                         android:paddingLeft="60dp"
