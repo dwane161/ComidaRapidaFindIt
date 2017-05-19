@@ -7,7 +7,6 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -36,7 +35,6 @@ import android.support.v7.widget.AppCompatDrawableManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
-import android.text.Html;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.Menu;
@@ -45,7 +43,6 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.RatingBar;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
@@ -61,7 +58,6 @@ import com.akexorcist.googledirection.model.Leg;
 import com.akexorcist.googledirection.model.Route;
 import com.akexorcist.googledirection.util.DirectionConverter;
 import com.djdevelopment.comidarapidafindit.R;
-import com.djdevelopment.comidarapidafindit.data.Image;
 import com.djdevelopment.comidarapidafindit.data.Ratings;
 import com.djdevelopment.comidarapidafindit.data.Restaurants;
 import com.djdevelopment.comidarapidafindit.tools.DownloadImageTask;
@@ -73,13 +69,13 @@ import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.auth.api.signin.GoogleSignInResult;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.MapStyleOptions;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
@@ -118,7 +114,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
-import java.util.Queue;
 
 import butterknife.BindView;
 import butterknife.OnClick;
@@ -190,7 +185,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     ArrayList<Restaurants> restaurants = new ArrayList<>();
     ArrayList<String> keys = new ArrayList<>();
     ArrayList<String> photosUrl = new ArrayList<>();
-    ArrayList<String> commentsUsersImages = new ArrayList<>();
     UtilUI utilUI = new UtilUI();
     String mCurrentPhotoPath;
     LatLng positionMarker;
@@ -406,7 +400,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     void shareRest(){
         Intent intent = new Intent(Intent.ACTION_SEND);
         intent.setType("text/plain");
-        intent.putExtra(Intent.EXTRA_TEXT,"Visita \""+restaurants.get(markerSelected).getRestName()+"\". Ubicado en:"+ "http://maps.google.com/maps?q=loc:"+String.format("%f,%f", positionMarker.latitude, positionMarker.longitude ) );
+        intent.putExtra(Intent.EXTRA_TEXT,"Visita \""
+                +restaurants.get(markerSelected).getRestName()
+                +"\". Ubicado en: http://maps.google.com/maps?q=loc:"+
+                String.format("%f,%f", positionMarker.latitude, positionMarker.longitude ));
         startActivity(Intent.createChooser(intent, "Compartir sitio con:"));
     }
 
@@ -510,7 +507,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     public void onMapReady(GoogleMap googleMap) {
         //Initialization of the map
         mMap = googleMap;
-
+        mMap.setMapStyle(MapStyleOptions.loadRawResourceStyle(MainActivity.this, R.raw.mapstyle));
         mMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
             @Override
             public void onMapClick(LatLng latLng) {
@@ -531,7 +528,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         PackageManager.PERMISSION_GRANTED) {
 
             Location location = getLastKnownLocation();
-            locationUser = new LatLng(location.getLatitude(),location.getLongitude());
+            locationUser = new LatLng(18.4809443,-69.9325192);
             mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(locationUser,15));
             mMap.setMyLocationEnabled(true);
         }
@@ -679,18 +676,19 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     })
                     .show();
             RecyclerView rvValuedPlaces = (RecyclerView) dialog.getView().findViewById(R.id.rvValuedPlaces);
-
+            /*
             Collections.sort(this.restaurants, new Comparator<Restaurants>() {
                 @Override
                 public int compare(Restaurants restaurants1, Restaurants restaurants2) {
                     return (getRatingList(restaurants1) >= getRatingList(restaurants2)) ? -1 : 0;
                 }
             });
+            */
             ValuedPlacesAdapter adapter = new ValuedPlacesAdapter(restaurants, new ValuedPlacesAdapter.OnItemClickLister() {
                 @Override
                 public void OnItemClick(Restaurants name, int position) {
                     mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(convertStringToLatLng(name.getLatLong()),20));
-                    retrieveDataFromFirebase();
+                    loadBottomSheet(position);
                     dialog.dismiss();
                 }
             });
@@ -782,88 +780,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                 public boolean onMarkerClick(Marker marker) {
                                     //TODO AGREGAR LOS DEMAS CAMPOS DEL RESTAURANTE
                                     markerSelected = Integer.parseInt(marker.getSnippet());
-                                    bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
-                                    txtBottomSheet.setText(restaurants.get(markerSelected).getRestName());
-                                    getRatingList(markerSelected);
-                                    if(restaurants.get(markerSelected).getDelivery()){
-                                        lblDelivery.setText(R.string.available_delivery);
-                                    }
-                                    else {
-                                        lblDelivery.setText(R.string.not_available_delivery);
-                                    }
-
-                                    txtRating.setText(String.valueOf(rating));
-                                    if(restaurants.get(markerSelected).getCreditCards().equals("")){
-                                        txtCreditCards.setText("No se acepta tarjetas de credito");
-                                    }
-                                    else {
-                                        txtCreditCards.setText(restaurants.get(markerSelected).getCreditCards());
-                                    }
-                                    ratingBarBottom.setRating(rating);
-                                    if(restaurants.get(markerSelected).getTelephones().equals("")){
-                                        lblTelephone.setText("No existen telefonos registrados");
-                                    }
-                                    else {
-                                        lblTelephone.setText(restaurants.get(markerSelected).getTelephones());
-                                    }
-                                    loadRatingListToUI();
-
-                                    if(restaurants.get(markerSelected).getUrlImage() == null){
-                                        mThumbnailPreview.clear();
-                                        imageViewBottomSheet.setImageBitmap(null);
-                                        textViewImageBottomSheet.setText(R.string.image_not_storage);
-                                    }
-                                    else {
-                                        try {
-                                            mThumbnailPreview.clear();
-                                            photosUrl.clear();
-                                            textViewImageBottomSheet.setText(restaurants.get(markerSelected).getUrlImage().size()+ " foto/s");
-                                            loadImageUI();
-                                        } catch (Exception ex) {
-                                            mThumbnailPreview.setImageBitmap(null);
-                                            ex.printStackTrace();
-                                        }
-                                    }
-                                    positionMarker = marker.getPosition();
-                                    /*
-                                    Location locationA = new Location("point A");
-
-                                    locationA.setLatitude(locationUser.latitude);
-                                    locationA.setLongitude(locationUser.longitude);
-
-                                    Location locationB = new Location("point B");
-
-                                    locationB.setLatitude(positionMarker.latitude);
-                                    locationB.setLongitude(positionMarker.longitude);
-
-                                    float distance = locationA.distanceTo(locationB);
-                                    System.out.print(distance);
-                                    */
-                                    try {
-                                        GoogleDirection.withServerKey(getString(R.string.google_direction_key))
-                                                .from(locationUser)
-                                                .to(positionMarker)
-                                                .transportMode(TransportMode.DRIVING)
-                                                .execute(new DirectionCallback() {
-                                                    @Override
-                                                    public void onDirectionSuccess(Direction direction, String rawBody) {
-                                                        if (direction.isOK()) {
-                                                            Route route = direction.getRouteList().get(0);
-                                                            Leg leg = route.getLegList().get(0);
-
-                                                            ArrayList<LatLng> directionPositionList = leg.getDirectionPoint();
-                                                            polylineOptions = DirectionConverter.createPolyline(MainActivity.this, directionPositionList, 5, Color.RED);
-                                                        }
-                                                    }
-
-                                                    @Override
-                                                    public void onDirectionFailure(Throwable t) {
-
-                                                    }
-                                                });
-
-                                    }
-                                    catch (Exception ex){ex.printStackTrace();}
+                                    loadBottomSheet(markerSelected);
                                     return true;
                                 }
                             });
@@ -1121,9 +1038,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         imageViewUsuario.setImageBitmap(utilUI.getBitmapFromURL(user.getPhotoUrl().toString()));
     }
 
-    private void loadImageUI(){
+    private void loadImageUI(int rest){
         try {
-            for (String key : restaurants.get(markerSelected).getUrlImage().keySet()) {
+            for (String key : restaurants.get(rest).getUrlImage().keySet()) {
                 try {
                     JSONObject jObj = new JSONObject(restaurants.get(markerSelected).getUrlImage().get(key));
                     photosUrl.add(jObj.getString("url"));
@@ -1199,6 +1116,92 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             ex.printStackTrace();
             return 0;
         }
+    }
+
+    public void loadBottomSheet(int rest){
+
+        bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
+        txtBottomSheet.setText(restaurants.get(rest).getRestName());
+        getRatingList(rest);
+        if(restaurants.get(rest).getDelivery()){
+            lblDelivery.setText(R.string.available_delivery);
+        }
+        else {
+            lblDelivery.setText(R.string.not_available_delivery);
+        }
+
+        txtRating.setText(String.valueOf(rating));
+        if(restaurants.get(rest).getCreditCards().equals("")){
+            txtCreditCards.setText("No se acepta tarjetas de credito");
+        }
+        else {
+            txtCreditCards.setText(restaurants.get(rest).getCreditCards());
+        }
+        ratingBarBottom.setRating(rating);
+        if(restaurants.get(rest).getTelephones().equals("")){
+            lblTelephone.setText("No existen telefonos registrados");
+        }
+        else {
+            lblTelephone.setText(restaurants.get(rest).getTelephones());
+        }
+        loadRatingListToUI();
+
+        if(restaurants.get(rest).getUrlImage() == null){
+            mThumbnailPreview.clear();
+            imageViewBottomSheet.setImageBitmap(null);
+            textViewImageBottomSheet.setText(R.string.image_not_storage);
+        }
+        else {
+            try {
+                mThumbnailPreview.clear();
+                photosUrl.clear();
+                textViewImageBottomSheet.setText(restaurants.get(rest).getUrlImage().size()+ " foto/s");
+                loadImageUI(rest);
+            } catch (Exception ex) {
+                mThumbnailPreview.setImageBitmap(null);
+                ex.printStackTrace();
+            }
+        }
+        //positionMarker = marker.getPosition();
+                                    /*
+                                    Location locationA = new Location("point A");
+
+                                    locationA.setLatitude(locationUser.latitude);
+                                    locationA.setLongitude(locationUser.longitude);
+
+                                    Location locationB = new Location("point B");
+
+                                    locationB.setLatitude(positionMarker.latitude);
+                                    locationB.setLongitude(positionMarker.longitude);
+
+                                    float distance = locationA.distanceTo(locationB);
+                                    System.out.print(distance);
+                                    */
+        try {
+            GoogleDirection.withServerKey(getString(R.string.google_direction_key))
+                    .from(locationUser)
+                    .to(positionMarker)
+                    .transportMode(TransportMode.DRIVING)
+                    .execute(new DirectionCallback() {
+                        @Override
+                        public void onDirectionSuccess(Direction direction, String rawBody) {
+                            if (direction.isOK()) {
+                                Route route = direction.getRouteList().get(0);
+                                Leg leg = route.getLegList().get(0);
+
+                                ArrayList<LatLng> directionPositionList = leg.getDirectionPoint();
+                                polylineOptions = DirectionConverter.createPolyline(MainActivity.this, directionPositionList, 5, Color.RED);
+                            }
+                        }
+
+                        @Override
+                        public void onDirectionFailure(Throwable t) {
+
+                        }
+                    });
+
+        }
+        catch (Exception ex){ex.printStackTrace();}
     }
 
 }

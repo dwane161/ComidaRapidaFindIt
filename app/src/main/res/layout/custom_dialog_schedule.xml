@@ -13,36 +13,49 @@
             android:layout_width="45dp"
             android:layout_height="35dp"
             android:id="@+id/btnD"
+            android:tag="1"
             android:text="D"
             android:background = "@drawable/roundedbutton"/>
         <Button
             android:layout_width="45dp"
             android:layout_height="35dp"
+            android:id="@+id/btnL"
+            android:tag="1"
             android:text="L"
             android:background = "@drawable/roundedbutton"/>
         <Button
             android:layout_width="45dp"
             android:layout_height="35dp"
+            android:tag="1"
+            android:id="@+id/btnMa"
             android:text="M"
             android:background = "@drawable/roundedbutton"/>
         <Button
             android:layout_width="45dp"
             android:layout_height="35dp"
+            android:tag="1"
+            android:id="@+id/btnMi"
             android:text="M"
             android:background = "@drawable/roundedbutton"/>
         <Button
             android:layout_width="45dp"
             android:layout_height="35dp"
+            android:tag="1"
+            android:id="@+id/btnJ"
             android:text="J"
             android:background = "@drawable/roundedbutton"/>
         <Button
             android:layout_width="45dp"
             android:layout_height="35dp"
+            android:tag="1"
+            android:id="@+id/btnV"
             android:text="V"
             android:background = "@drawable/roundedbutton"/>
         <Button
             android:layout_width="45dp"
             android:layout_height="35dp"
+            android:tag="1"
+            android:id="@+id/btnS"
             android:text="S"
             android:background = "@drawable/roundedbutton"/>
     </LinearLayout>

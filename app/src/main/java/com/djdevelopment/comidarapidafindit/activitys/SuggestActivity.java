@@ -9,6 +9,7 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.graphics.Typeface;
 import android.net.Uri;
 import android.os.Build;
@@ -22,6 +23,7 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
 import android.util.Log;
@@ -60,6 +62,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 
+import butterknife.BindView;
+import butterknife.ButterKnife;
+import butterknife.OnClick;
+import butterknife.Optional;
+
 public class SuggestActivity extends AppCompatActivity{
 
     final Context context = this;
@@ -77,12 +84,17 @@ public class SuggestActivity extends AppCompatActivity{
     LinearLayout cardViewCreditCards = null;
     LinearLayout cardViewLocation = null;
     LinearLayout cardViewSchedule = null;
+    @BindView(R.id.btnS) Button btnS;
     ToggleButton toogleDelivery;
-
     String key;
 
     String urlImage;
 
+    @Optional
+    @OnClick({R.id.btnD,R.id.btnL,R.id.btnMa, R.id.btnMi,R.id.btnJ,R.id.btnV,R.id.btnS})
+    void setBackgoundColor(final Button btnDayWeek){
+        btnDayWeek.setBackgroundColor(Color.RED);
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -371,7 +383,6 @@ public class SuggestActivity extends AppCompatActivity{
 
             @Override
             public void onClick(View v) {
-
                 UtilUI.getScheduleDialog(SuggestActivity.this, new Runnable() {
 
                     @Override
@@ -380,12 +391,14 @@ public class SuggestActivity extends AppCompatActivity{
                         UtilUI.hideSoftKeyBoard(SuggestActivity.this);
 
                         View viewPhones = inflaterItem.inflate(R.layout.item_layout_edit, null, true);
-                        TextView txtPhone = (TextView) viewPhones.findViewById(R.id.lblTimeOftheLastVote);
+
+                        String scheduleDays = UtilUI.scheduleDays.toString();
+                        TextView txtSchedule = (TextView) viewPhones.findViewById(R.id.lblTimeOftheLastVote);
                         TextView txtValue = (TextView) viewPhones.findViewById(R.id.service_value);
 
-                        txtPhone.setTypeface(custom_font2);
+                        txtSchedule.setText(scheduleDays);
 
-                        txtValue.setOnClickListener(new View.OnClickListener() {
+                        txtSchedule.setOnClickListener(new View.OnClickListener() {
 
                             @Override
                             public void onClick(View v) {
@@ -394,15 +407,11 @@ public class SuggestActivity extends AppCompatActivity{
                                 cardViewSchedule.removeViewAt(index);
                             }
                         });
-
-
                         cardViewSchedule.addView(viewPhones);
-
-
                     }
                 });
-            }
 
+            }
         });
     }
 

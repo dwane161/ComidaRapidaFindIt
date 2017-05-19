@@ -4,47 +4,39 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
-import android.media.MediaRecorder;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
-import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.MotionEvent;
 import android.view.View;
-import android.view.ViewGroup;
-import android.view.ViewParent;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.DatePicker;
 import android.widget.EditText;
-import android.widget.LinearLayout;
-import android.widget.ScrollView;
 import android.widget.Spinner;
 import android.widget.TextView;
-import android.widget.TimePicker;
 import android.widget.Toast;
 
+import com.bumptech.glide.load.engine.Resource;
 import com.djdevelopment.comidarapidafindit.R;
-import com.djdevelopment.comidarapidafindit.activitys.SuggestActivity;
 import com.djdevelopment.comidarapidafindit.data.MenuService;
-import com.yuncun.swipeableweekview.WeekViewAdapter;
-import com.yuncun.swipeableweekview.WeekViewSwipeable;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+
+import butterknife.ButterKnife;
+import butterknife.OnClick;
 
 /**
  * Created by Dwane Jimenez on 2/23/2017.
@@ -52,18 +44,24 @@ import java.util.List;
 
 public class UtilUI {
     public static MenuService menuService = null;
-    public  static String telephone = null;
+    public static String telephone = null;
+    public static StringBuilder scheduleDays = new StringBuilder();
 
-    public static MenuService getMenuServiceDialog(final Activity activity, final Runnable callbackPositiveAction ){
+    @OnClick({R.id.btnD, R.id.btnL, R.id.btnMa, R.id.btnMi, R.id.btnJ, R.id.btnV, R.id.btnS})
+    void setBackground(Button btnDayWeek) {
+        btnDayWeek.setBackgroundColor(Color.RED);
+    }
+
+    public static MenuService getMenuServiceDialog(final Activity activity, final Runnable callbackPositiveAction) {
         AlertDialog.Builder builder = new AlertDialog.Builder(activity);
         // Get the layout inflater
 
         LayoutInflater inflater = activity.getLayoutInflater();
-        final View viewRoot =  inflater.inflate(R.layout.custom_dialog_menu_service, null);
-        View custom_title =  inflater.inflate(R.layout.custom_title, null);
+        final View viewRoot = inflater.inflate(R.layout.custom_dialog_menu_service, null);
+        View custom_title = inflater.inflate(R.layout.custom_title, null);
 
 
-        ((TextView)custom_title.findViewById(R.id.txtTitleDialog)).setText("Sugerir");
+        ((TextView) custom_title.findViewById(R.id.txtTitleDialog)).setText("Sugerir");
 
 
         builder.setCustomTitle(custom_title);
@@ -78,25 +76,23 @@ public class UtilUI {
 
         builder.setCancelable(false);
 
-        builder.setView(viewRoot) .setNegativeButton(R.string.cancel, null);
-        builder.setView(viewRoot) .setPositiveButton(R.string.lblAdd, null);
+        builder.setView(viewRoot).setNegativeButton(R.string.cancel, null);
+        builder.setView(viewRoot).setPositiveButton(R.string.lblAdd, null);
 
         final AlertDialog dialog = builder.create();
         dialog.show();
         //Overriding the handler immediately after show is probably a better approach than OnShowListener as described below
-        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(new View.OnClickListener()
-        {
+        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View v)
-            {
-                EditText txtMotelServiceName  =  (EditText) viewRoot.findViewById(R.id.txtMotelServiceName);
-                EditText txtMotelServicePrice  =  (EditText) viewRoot.findViewById(R.id.txtMotelServicePrice);
+            public void onClick(View v) {
+                EditText txtMotelServiceName = (EditText) viewRoot.findViewById(R.id.txtMotelServiceName);
+                EditText txtMotelServicePrice = (EditText) viewRoot.findViewById(R.id.txtMotelServicePrice);
 
-                if(!UtilUI.validateEmptyFields(activity,txtMotelServiceName,txtMotelServicePrice)){
+                if (!UtilUI.validateEmptyFields(activity, txtMotelServiceName, txtMotelServicePrice)) {
 
-                    menuService = new MenuService("",0,0);
+                    menuService = new MenuService("", 0, 0);
 
-                    menuService = new MenuService(txtMotelServiceName.getText().toString(),  Double.parseDouble(txtMotelServicePrice.getText().toString()),
+                    menuService = new MenuService(txtMotelServiceName.getText().toString(), Double.parseDouble(txtMotelServicePrice.getText().toString()),
                             motels_services_currency_type.getSelectedItemPosition());
 
                     txtMotelServiceName.setText("");
@@ -113,24 +109,23 @@ public class UtilUI {
 
     }
 
-    public  static void  getCreditCardsDialog(final Activity activity, final ArrayList<String> creditCards, final Runnable callbackPositiveAction ){
+    public static void getCreditCardsDialog(final Activity activity, final ArrayList<String> creditCards, final Runnable callbackPositiveAction) {
 
         AlertDialog.Builder builder = new AlertDialog.Builder(activity);
         LayoutInflater inflater = activity.getLayoutInflater();
 
-        final String[] credit_cards_type_string =activity.getResources().getStringArray(R.array.credit_cards_type);
-        final boolean []  credit_cards_selected = {true,true,false,false};
+        final String[] credit_cards_type_string = activity.getResources().getStringArray(R.array.credit_cards_type);
+        final boolean[] credit_cards_selected = {true, true, false, false};
         creditCards.add(credit_cards_type_string[0]);
         creditCards.add(credit_cards_type_string[1]);
-        View custom_title =  inflater.inflate(R.layout.custom_title, null);
+        View custom_title = inflater.inflate(R.layout.custom_title, null);
 
 
-        ((TextView)custom_title.findViewById(R.id.txtTitleDialog)).setText(R.string.CreditCardSuggested);
-
+        ((TextView) custom_title.findViewById(R.id.txtTitleDialog)).setText(R.string.CreditCardSuggested);
 
 
         builder.setCustomTitle(custom_title)
-                .setMultiChoiceItems(R.array.credit_cards_type,new boolean[]{true,true,false,false},new DialogInterface.OnMultiChoiceClickListener() {
+                .setMultiChoiceItems(R.array.credit_cards_type, new boolean[]{true, true, false, false}, new DialogInterface.OnMultiChoiceClickListener() {
 
                     @Override
                     public void onClick(DialogInterface dialog, int which, boolean isChecked) {
@@ -154,20 +149,18 @@ public class UtilUI {
 
         builder.setNegativeButton(R.string.cancel, null).setPositiveButton(R.string.lblAdd, null);
 
-        final AlertDialog dialog = 			    builder.create();
+        final AlertDialog dialog = builder.create();
         dialog.show();
         //Overriding the handler immediately after show is probably a better approach than OnShowListener as described below
-        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(new View.OnClickListener()
-        {
+        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View v)
-            {
-                if(UtilUI.validateMultipleChoiceWithMessage(activity,credit_cards_selected)){
+            public void onClick(View v) {
+                if (UtilUI.validateMultipleChoiceWithMessage(activity, credit_cards_selected)) {
 
                     dialog.dismiss();
                     callbackPositiveAction.run();
 
-                }else{
+                } else {
                     dialog.dismiss();
                 }
             }
@@ -175,15 +168,15 @@ public class UtilUI {
 
     }
 
-    public  static String  getTelephoneDialog(final Activity activity,final Runnable callbackPositiveAction ){
+    public static String getTelephoneDialog(final Activity activity, final Runnable callbackPositiveAction) {
         AlertDialog.Builder builder = new AlertDialog.Builder(activity);
         // Get the layout inflater
         LayoutInflater inflater = activity.getLayoutInflater();
-        final View viewRoot =  inflater.inflate(R.layout.custom_dialog_telephone, null);
-        View custom_title =  inflater.inflate(R.layout.custom_title, null);
+        final View viewRoot = inflater.inflate(R.layout.custom_dialog_telephone, null);
+        View custom_title = inflater.inflate(R.layout.custom_title, null);
 
 
-        ((TextView)custom_title.findViewById(R.id.txtTitleDialog)).setText(R.string.TelephoneSuggested);
+        ((TextView) custom_title.findViewById(R.id.txtTitleDialog)).setText(R.string.TelephoneSuggested);
 
         builder.setCustomTitle(custom_title).setCancelable(false)
                 .setView(viewRoot)
@@ -191,21 +184,19 @@ public class UtilUI {
                 .setView(viewRoot)
                 .setPositiveButton(R.string.lblAdd, null);
 
-        final AlertDialog dialog = 	 builder.create();
+        final AlertDialog dialog = builder.create();
         dialog.show();
         //Overriding the handler immediately after show is probably a better approach than OnShowListener as described below
-        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(new View.OnClickListener()
-        {
+        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View v)
-            {
-                EditText  txtTelephone  =  (EditText) viewRoot.findViewById(R.id.txtTelephone);
+            public void onClick(View v) {
+                EditText txtTelephone = (EditText) viewRoot.findViewById(R.id.txtTelephone);
 
 
-                if(!UtilUI.validateEmptyFields(activity,txtTelephone)){
+                if (!UtilUI.validateEmptyFields(activity, txtTelephone)) {
 
 
-                    telephone = 	   txtTelephone.getText().toString();
+                    telephone = txtTelephone.getText().toString();
                     dialog.dismiss();
                     callbackPositiveAction.run();
 
@@ -218,15 +209,16 @@ public class UtilUI {
 
     }
 
-    public static String   getScheduleDialog(final Activity activity,final Runnable callbackPositiveAction ){
+    public static String getScheduleDialog(final Activity activity, final Runnable callbackPositiveAction) {
 
         AlertDialog.Builder builder = new AlertDialog.Builder(activity);
         // Get the layout inflater
         LayoutInflater inflater = activity.getLayoutInflater();
-        final View viewRoot =  inflater.inflate(R.layout.custom_dialog_schedule, null);
-        View custom_title =  inflater.inflate(R.layout.custom_title, null);
+        final View viewRoot = inflater.inflate(R.layout.custom_dialog_schedule, null);
+        View custom_title = inflater.inflate(R.layout.custom_title, null);
+        ButterKnife.bind(viewRoot);
 
-        ((TextView)custom_title.findViewById(R.id.txtTitleDialog)).setText(R.string.TelephoneSuggested);
+        BehaviorOfButtonSchedule(viewRoot);
 
         builder.setCustomTitle(custom_title).setCancelable(false)
                 .setView(viewRoot)
@@ -234,35 +226,33 @@ public class UtilUI {
                 .setView(viewRoot)
                 .setPositiveButton(R.string.lblAdd, null);
 
-        final AlertDialog dialog = 	 builder.create();
+        final AlertDialog dialog = builder.create();
         dialog.show();
         //Overriding the handler immediately after show is probably a better approach than OnShowListener as described below
-        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(new View.OnClickListener()
-        {
+        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View v)
-            {
+            public void onClick(View v) {
                 callbackPositiveAction.run();
             }
         });
 
-        return telephone;
+        return scheduleDays.toString();
 
     }
 
-    public static boolean validateMultipleChoiceWithMessage(final Activity activity,boolean ...choices){
+    public static boolean validateMultipleChoiceWithMessage(final Activity activity, boolean... choices) {
         boolean isValid = validateMultipleChoice(choices);
-        if( !isValid){
+        if (!isValid) {
             showToaststMessage(activity.getString(R.string.msErrorMultipleChoiceInvalid), activity);
         }
 
         return isValid;
     }
 
-    public static boolean validateMultipleChoice(boolean ...choices){
+    public static boolean validateMultipleChoice(boolean... choices) {
         boolean isValid = false;
-        for( boolean  choice :choices){
-            if(choice){
+        for (boolean choice : choices) {
+            if (choice) {
                 isValid = true;
                 break;
             }
@@ -271,28 +261,28 @@ public class UtilUI {
         return isValid;
     }
 
-    public static void showToaststMessage(String strTexto,Context context){
+    public static void showToaststMessage(String strTexto, Context context) {
         String strNoInternet = strTexto;
-        Toast.makeText(context,strNoInternet,Toast.LENGTH_LONG).show();
+        Toast.makeText(context, strNoInternet, Toast.LENGTH_LONG).show();
 
     }
 
     public static void hideSoftKeyBoard(Activity activity) {
         InputMethodManager imm = (InputMethodManager) activity.getSystemService(Context.INPUT_METHOD_SERVICE);
-        if (imm != null )
+        if (imm != null)
             imm.hideSoftInputFromWindow(activity.getWindow().getCurrentFocus().getWindowToken(), 0);
     }
 
     public static boolean validateEmptyFields(Context context, EditText... txts) {
         boolean isCampoVacio = false;
-        for(EditText itemTxt : txts){
-            if("".equals(itemTxt.getText().toString().trim())){
+        for (EditText itemTxt : txts) {
+            if ("".equals(itemTxt.getText().toString().trim())) {
                 Animation shake = AnimationUtils.loadAnimation(context, R.anim.shake);
                 itemTxt.startAnimation(shake);
                 itemTxt.setError(context.getString(R.string.msErrorEmptyField));
                 itemTxt.setText("");
                 isCampoVacio = true;
-            }else{
+            } else {
                 itemTxt.setError(null);
             }
         }
@@ -300,7 +290,7 @@ public class UtilUI {
 
     }
 
-    public static void showAlertDialog(Context context, String title, View view, int stringButton, final Runnable callBackaPositiveButton){
+    public static void showAlertDialog(Context context, String title, View view, int stringButton, final Runnable callBackaPositiveButton) {
         AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(
                 context);
 
@@ -311,7 +301,7 @@ public class UtilUI {
         alertDialogBuilder
                 .setView(view)
                 .setCancelable(false)
-                .setPositiveButton(stringButton,new DialogInterface.OnClickListener() {
+                .setPositiveButton(stringButton, new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int id) {
                         // if this button is clicked
                     }
@@ -326,7 +316,7 @@ public class UtilUI {
         alertDialogBuilder = null;
     }
 
-    public static void showAlertDialog(Context context, String title, String message, int stringButton, final Runnable callBackaPositiveButton){
+    public static void showAlertDialog(Context context, String title, String message, int stringButton, final Runnable callBackaPositiveButton) {
         AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(
                 context);
 
@@ -337,10 +327,10 @@ public class UtilUI {
         alertDialogBuilder
                 .setMessage(message)
                 .setCancelable(false)
-                .setPositiveButton(stringButton,new DialogInterface.OnClickListener() {
+                .setPositiveButton(stringButton, new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int id) {
                         // if this button is clicked
-                        if(callBackaPositiveButton!=null){
+                        if (callBackaPositiveButton != null) {
 
                             callBackaPositiveButton.run();
                         }
@@ -360,28 +350,28 @@ public class UtilUI {
         ConnectivityManager cm = (ConnectivityManager) context.getSystemService(
                 Context.CONNECTIVITY_SERVICE);
         boolean isConnection = false;
-        NetworkInfo wifiNetwork =null;
-        try{
+        NetworkInfo wifiNetwork = null;
+        try {
             wifiNetwork = cm.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
-        }catch(Exception e){
+        } catch (Exception e) {
             System.out.println(e);
         }
         if (wifiNetwork != null && wifiNetwork.isConnected()) {
             isConnection = true;
         }
         NetworkInfo mobileNetwork = null;
-        try{
+        try {
             mobileNetwork = cm.getNetworkInfo(ConnectivityManager.TYPE_MOBILE);
-        }catch(Exception e){
+        } catch (Exception e) {
             System.out.println(e);
         }
         if (mobileNetwork != null && mobileNetwork.isConnected()) {
             isConnection = true;
         }
         NetworkInfo activeNetwork = null;
-        try{
+        try {
             activeNetwork = cm.getActiveNetworkInfo();
-        }catch(Exception e){
+        } catch (Exception e) {
             System.out.println(e);
         }
         if (activeNetwork != null && activeNetwork.isConnected()) {
@@ -391,33 +381,143 @@ public class UtilUI {
         return isConnection;
     }
 
-    public static boolean validateInternetConnetion(Context context, Runnable callBackConfirmButton){
+    public static boolean validateInternetConnetion(Context context, Runnable callBackConfirmButton) {
         boolean connection = false;
-        if( hasConnection(context)){
+        if (hasConnection(context)) {
             connection = true;
-        }else{
+        } else {
 
 
-            showAlertDialog(context, context.getString(R.string.message), context.getString(R.string.msInternetNoConnection), R.string.ok, callBackConfirmButton );
+            showAlertDialog(context, context.getString(R.string.message), context.getString(R.string.msInternetNoConnection), R.string.ok, callBackConfirmButton);
         }
         return connection;
     }
 
-    public static Bitmap getBitmapFromURL(String src) {
+    public static Bitmap getBitmapFromURL(final String src) {
         try {
-            Log.e("src",src);
+            Log.e("src", src);
             URL url = new URL(src);
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
             connection.setDoInput(true);
             connection.connect();
             InputStream input = connection.getInputStream();
             Bitmap myBitmap = BitmapFactory.decodeStream(input);
-            Log.e("Bitmap","returned");
+            Log.e("Bitmap", "returned");
             return myBitmap;
         } catch (IOException e) {
             e.printStackTrace();
-            Log.e("Exception",e.getMessage());
+            Log.e("Exception", e.getMessage());
             return null;
         }
+    }
+
+    public static void BehaviorOfButtonSchedule(final View viewRoot){
+        final Button btnD = (Button) viewRoot.findViewById(R.id.btnD);
+        final Button btnL = (Button) viewRoot.findViewById(R.id.btnL);
+        final Button btnMa = (Button) viewRoot.findViewById(R.id.btnMa);
+        final Button btnMi = (Button) viewRoot.findViewById(R.id.btnMi);
+        final Button btnJ = (Button) viewRoot.findViewById(R.id.btnJ);
+        final Button btnV = (Button) viewRoot.findViewById(R.id.btnV);
+        final Button btnS = (Button) viewRoot.findViewById(R.id.btnS);
+        btnD.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (btnD.getTag().equals(1)) {
+                    btnD.setBackground(viewRoot.getResources().getDrawable(R.drawable.button_bg_normal));
+                    btnD.setTag(2);
+                } else {
+                    btnD.setBackground(viewRoot.getResources().getDrawable(R.drawable.button_bg_selected));
+                    scheduleDays.append("D");
+                    btnD.setTag(1);
+                }
+            }
+        });
+        btnL.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (btnL.getTag().equals(1)) {
+                    btnL.setBackground(viewRoot.getResources().getDrawable(R.drawable.button_bg_normal));
+                    scheduleDays.deleteCharAt(scheduleDays.length()-1);
+                    btnL.setTag(2);
+                } else {
+                    btnL.setBackground(viewRoot.getResources().getDrawable(R.drawable.button_bg_selected));
+                    scheduleDays.append("L");
+                    btnL.setTag(1);
+                }
+            }
+        });
+        btnMa.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+                if (btnMa.getTag().equals(1)) {
+                    btnMa.setBackground(viewRoot.getResources().getDrawable(R.drawable.button_bg_normal));
+                    scheduleDays.deleteCharAt(scheduleDays.length()-1);
+                    btnMa.setTag(2);
+                } else {
+                    btnMa.setBackground(viewRoot.getResources().getDrawable(R.drawable.button_bg_selected));
+                    scheduleDays.append("M");
+                    btnMa.setTag(1);
+                }
+            }
+        });
+        btnMi.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+                if (btnMi.getTag().equals(1)) {
+                    btnMi.setBackground(viewRoot.getResources().getDrawable(R.drawable.button_bg_normal));
+                    scheduleDays.deleteCharAt(scheduleDays.length()-1);
+                    btnMi.setTag(2);
+                } else {
+                    btnMi.setBackground(viewRoot.getResources().getDrawable(R.drawable.button_bg_selected));
+                    scheduleDays.append("M");
+                    btnMi.setTag(1);
+                }
+            }
+        });
+        btnJ.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (btnJ.getTag().equals(1)) {
+                    btnJ.setBackground(viewRoot.getResources().getDrawable(R.drawable.button_bg_normal));
+                    scheduleDays.deleteCharAt(scheduleDays.length()-1);
+                    btnJ.setTag(2);
+                } else {
+                    btnJ.setBackground(viewRoot.getResources().getDrawable(R.drawable.button_bg_selected));
+                    scheduleDays.append("J");
+                    btnJ.setTag(1);
+                }
+            }
+        });
+        btnV.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (btnV.getTag().equals(1)) {
+                    btnV.setBackground(viewRoot.getResources().getDrawable(R.drawable.button_bg_normal));
+                    scheduleDays.deleteCharAt(scheduleDays.length()-1);
+                    btnV.setTag(2);
+                } else {
+                    btnV.setBackground(viewRoot.getResources().getDrawable(R.drawable.button_bg_selected));
+                    scheduleDays.append("V");
+                    btnV.setTag(1);
+                }
+            }
+        });
+        btnS.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (btnS.getTag().equals(1)) {
+                    btnS.setBackground(viewRoot.getResources().getDrawable(R.drawable.button_bg_normal));
+                    scheduleDays.deleteCharAt(scheduleDays.length()-1);
+                    btnS.setTag(2);
+                } else {
+                    btnS.setBackground(viewRoot.getResources().getDrawable(R.drawable.button_bg_selected));
+                    scheduleDays.append("S");
+                    btnS.setTag(1);
+                }
+            }
+        });
+
     }
 }
