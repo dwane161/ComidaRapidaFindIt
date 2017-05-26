@@ -168,6 +168,11 @@
     <string name="share_app">Desgarga la app</string>
     <string name="google_direction_key">AIzaSyAseOR6uttx9_AMO89pcG2WzaT-Bl6zMWA</string>
     <string name="image_not_storage">No existen imagenes registradas, sé el primero en colaborar</string>
+    <string name="str_suggest">Sugerir</string>
+    <string name="direction_not_found">Lat %1$d Lon %2$d</string>
+    <string name="no_credit_cards">No se acepta tarjetas de credito</string>
+    <string name="not_telephone_registered">No existen telefonos  registrados</string>
+    <string name="photos_count">%1$s foto/s</string>
 
 
 </resources>
